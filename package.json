@@ -1,5 +1,5 @@
 {
-  "name": "comboio",
+  "name": "comboio-overlay",
   "version": "0.1.0",
   "author": {
     "name": "Bruno Marques",
@@ -30,7 +30,7 @@
       }
     ]
   },
-  "repository": "https://github.com/ElSaico/nodecg.git",
+  "repository": "https://github.com/ElSaico/comboio-overlay.git",
   "license": "MPL-2.0",
   "dependencies": {
     "@svgdotjs/svg.js": "^3.1.1",
