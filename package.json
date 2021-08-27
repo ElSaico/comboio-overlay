@@ -1,0 +1,42 @@
+{
+  "name": "comboio",
+  "version": "0.1.0",
+  "author": {
+    "name": "Bruno Marques",
+    "email": "bruno@bmarques.net",
+    "url": "https://twitch.tv/ElSaico"
+  },
+  "files": [
+    "dashboard",
+    "graphics",
+    "extension.js"
+  ],
+  "nodecg": {
+    "compatibleRange": "^1.1.1",
+    "dashboardPanels": [
+      {
+        "name": "panel",
+        "title": "Panel",
+        "width": 2,
+        "file": "panel.html",
+        "headerColor": "#525F78"
+      }
+    ],
+    "graphics": [
+      {
+        "file": "index.html",
+        "width": 1920,
+        "height": 1080
+      }
+    ]
+  },
+  "repository": "https://github.com/ElSaico/nodecg.git",
+  "license": "MPL-2.0",
+  "dependencies": {
+    "@svgdotjs/svg.js": "^3.1.1",
+    "axios": "^0.21.1",
+    "lodash": "^4.17.21",
+    "obs-websocket-js": "^4.0.3",
+    "socket.io-client": "^2.4.0"
+  }
+}

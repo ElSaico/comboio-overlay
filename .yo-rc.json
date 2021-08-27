@@ -1,0 +1,9 @@
+{
+  "generator-nodecg": {
+    "promptValues": {
+      "authorName": "Bruno Marques",
+      "authorEmail": "bruno@bmarques.net",
+      "authorUrl": "https://twitch.tv/ElSaico"
+    }
+  }
+}

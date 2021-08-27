@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title></title>
+    <link rel="stylesheet" href="comboio.css"/>
+    <script type='text/javascript' src="../node_modules/lodash/lodash.min.js"></script>
+    <script type='text/javascript' src="../node_modules/@svgdotjs/svg.js/dist/svg.min.js"></script>
+    <script type='text/javascript' src="led.js"></script>
+    <script type="text/javascript">
+      const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'EUR' });
+      const follower = nodecg.Replicant('follower');
+      const subscriber = nodecg.Replicant('subscriber');
+      const cheer = nodecg.Replicant('cheer');
+      const donate = nodecg.Replicant('donate');
+      const host = nodecg.Replicant('host');
+      const raid = nodecg.Replicant('raid');
+      const meudeus = nodecg.Replicant('meudeus');
+
+      document.addEventListener('DOMContentLoaded', async () => {
+        draw('#counter1', 'Meu Deus ####', 13, 5, 5);
+        draw('#counter2', '', 13, 5, 5);
+        draw('#counter3', '', 13, 5, 5);
+        draw('#counter4', '', 13, 5, 5);
+
+        follower.on('change', value => {
+          draw('#display-follower', value.name, 10, 4, 5, 100);
+        });
+
+        subscriber.on('change', value => {
+          draw('#display-subscriber', value.name, 10, 4, 5, 100);
+          // TODO TTS value.message after duration of video passes
+        });
+
+        cheer.on('change', value => {
+          draw('#display-cheer', `${value.name} (${value.amount})`, 10, 4, 5, 100);
+          // TODO TTS value.message after duration of video passes
+        });
+
+        donate.on('change', value => {
+          if (!value.name) { // TODO remove after first donation
+            draw('#display-donate', '', 10, 4, 5, 100);
+            return;
+          }
+          draw('#display-donate', `${value.name} (${currency.format(value.amount)})`, 10, 4, 5, 100);
+          // TODO TTS value.message after duration of video passes
+        });
+
+        host.on('change', value => {
+          console.log(value);
+        });
+
+        raid.on('change', value => {
+          console.log(value);
+        });
+
+        meudeus.on('change', value => {
+          console.log(`Meu Deus ${value}`);
+          draw('#counter1', `Meu Deus ${value.toString().padStart(4)}`, 13, 5, 5);
+        });
+      });
+    </script>
+  </head>
+
+  <body>
+    <svg id="counter1"></svg>
+    <svg id="counter2"></svg>
+    <svg id="counter3"></svg>
+    <svg id="counter4"></svg>
+    <h3 id="label-follower">Último embarque</h3>
+    <svg id="display-follower"></svg>
+    <h3 id="label-subscriber">Último passe</h3>
+    <svg id="display-subscriber"></svg>
+    <h3 id="label-cheer">Últimos bits</h3>
+    <svg id="display-cheer"></svg>
+    <h3 id="label-donate">Última doação</h3>
+    <svg id="display-donate"></svg>
+  </body>
+</html>

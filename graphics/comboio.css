@@ -1,0 +1,82 @@
+body {
+    margin: 0;
+    width: 1920px;
+    height: 1080px;
+    position: absolute;
+    background-color: #f6ffc2;
+}
+
+h3 {
+    position: absolute;
+    color: #474350;
+    width: 320px;
+    font-size: 32px;
+    font-family: 'Barlow', sans-serif;
+    font-weight: bold;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+svg {
+    position: absolute;
+}
+
+#label-follower {
+    left: 20px;
+    top: 900px;
+}
+
+#label-subscriber {
+    left: 360px;
+    top: 900px;
+}
+
+#label-cheer {
+    left: 700px;
+    top: 900px;
+}
+
+#label-donate {
+    left: 1040px;
+    top: 900px;
+}
+
+#display-follower {
+    left: 20px;
+    top: 1000px;
+}
+
+#display-subscriber {
+    left: 360px;
+    top: 1000px;
+}
+
+#display-cheer {
+    left: 700px;
+    top: 1000px;
+}
+
+#display-donate {
+    left: 1040px;
+    top: 1000px;
+}
+
+#counter1 {
+    left: 1380px;
+    top: 900px;
+}
+
+#counter2 {
+    left: 1380px;
+    top: 939px;
+}
+
+#counter3 {
+    left: 1380px;
+    top: 978px;
+}
+
+#counter4 {
+    left: 1380px;
+    top: 1017px;
+}
