@@ -13,7 +13,6 @@
       const subscriber = nodecg.Replicant('subscriber');
       const cheer = nodecg.Replicant('cheer');
       const donate = nodecg.Replicant('donate');
-      const host = nodecg.Replicant('host');
       const raid = nodecg.Replicant('raid');
       const meudeus = nodecg.Replicant('meudeus');
 
@@ -24,12 +23,12 @@
         draw('#counter4', '', 13, 5, 5);
 
         follower.on('change', value => {
-          draw('#display-follower', value.name, 10, 4, 5, 100);
+          draw('#display-follower', value, 10, 4, 5, 100);
         });
 
         subscriber.on('change', value => {
-          draw('#display-subscriber', value.name, 10, 4, 5, 100);
-          // TODO TTS value.message after duration of video passes
+          draw('#display-subscriber', value.user_name, 10, 4, 5, 100);
+          // TODO TTS value.message.text after duration of video passes
         });
 
         cheer.on('change', value => {
@@ -44,10 +43,6 @@
           }
           draw('#display-donate', `${value.name} (${currency.format(value.amount)})`, 10, 4, 5, 100);
           // TODO TTS value.message after duration of video passes
-        });
-
-        host.on('change', value => {
-          console.log(value);
         });
 
         raid.on('change', value => {

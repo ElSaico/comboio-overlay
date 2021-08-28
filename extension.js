@@ -9,16 +9,21 @@ module.exports = nodecg => {
 	const subscriber = nodecg.Replicant('subscriber');
 	const cheer = nodecg.Replicant('cheer');
 	const donate = nodecg.Replicant('donate');
-	const host = nodecg.Replicant('host');
 	const raid = nodecg.Replicant('raid');
 
-	axios.get(`https://api.streamelements.com/kappa/v2/sessions/${nodecg.bundleConfig.channelIdSE}`, {
+	axios.get(`https://api.twitch.tv/helix/users/follows?to_id=${nodecg.bundleConfig.channelId}`, {
 		headers: {
-			Authorization: `Bearer ${nodecg.bundleConfig.jwtToken}`
+			Authorization: `Bearer ${nodecg.bundleConfig.twitchApp.token}`,
+			'Client-Id': nodecg.bundleConfig.twitchApp.id
+		}
+	}).then(response => {
+		follower.value = response.data.data[0].from_name;
+	});
+	axios.get(`https://api.streamelements.com/kappa/v2/sessions/${nodecg.bundleConfig.streamElements.channelId}`, {
+		headers: {
+			Authorization: `Bearer ${nodecg.bundleConfig.streamElements.jwtToken}`
 		}
 	}).then(session => {
-		follower.value = session.data.data['follower-latest'];
-		subscriber.value = session.data.data['subscriber-latest'];
 		cheer.value = session.data.data['cheer-latest'];
 		donate.value = session.data.data['tip-latest'];
 	});
@@ -27,16 +32,7 @@ module.exports = nodecg => {
 	obs.connect(nodecg.bundleConfig.obs);
 
 	function seEventListener(data) {
-		// TODO use StreamElements API only for tracking tips, replace rest with EventSub
 		switch (data.listener) {
-			case 'follower-latest':
-				follower.value = data.event;
-				obs.send('RestartMedia', {sourceName: 'Wololo'});
-		  		break;
-			case 'subscriber-latest':
-				subscriber.value = data.event;
-				obs.send('RestartMedia', {sourceName: 'Heavy Metal'});
-				break;
 			case 'cheer-latest':
 				cheer.value = data.event;
 				obs.send('RestartMedia', {sourceName: 'OH O GÁS'});
@@ -45,22 +41,12 @@ module.exports = nodecg => {
 				donate.value = data.event;
 				obs.send('RestartMedia', {sourceName: 'OH O GÁS'});
 				break;
-			case 'host-latest':
-				host.value = data.event;
-				break;
-			case 'raid-latest':
-				raid.value = data.event;
-				obs.send('RestartMedia', {sourceName: 'AAAAAAAA'});
-				break;
-			default:
-				console.log(data);
-				break;
 		}
 	}
 
 	const elements = io('https://realtime.streamelements.com', { transports: ['websocket'] });
 	elements.on('connect', () => {
-		elements.emit('authenticate', { method: 'jwt', token: nodecg.bundleConfig.jwtToken });
+		elements.emit('authenticate', { method: 'jwt', token: nodecg.bundleConfig.streamElements.jwtToken });
 	});
 	elements.on('event:test', seEventListener);
 	elements.on('event', seEventListener);
@@ -76,10 +62,20 @@ module.exports = nodecg => {
 				secret: nodecg.bundleConfig.eventSubSecret
 			}
 		});
+		const subParams = { broadcaster_user_id: nodecg.bundleConfig.channelId };
 		eventSub.getSubscriptions().then(result => {
 			result.data.forEach(sub => {
 				eventSub.unsubscribe(sub.id);
 			});
+		});
+		eventSub.on('channel.follow', event => {
+			follower.value = event.user_name;
+			obs.send('RestartMedia', {sourceName: 'Wololo'});
+		});
+		eventSub.on('channel.subscription.message', event => {
+			subscriber.value = event;
+			console.log(event);
+			obs.send('RestartMedia', {sourceName: 'Heavy Metal'});
 		});
 		eventSub.on('channel.channel_points_custom_reward_redemption.add', event => {
 			const sourceName = nodecg.bundleConfig.rewardMedia[event.reward.title];
@@ -87,8 +83,13 @@ module.exports = nodecg => {
 				obs.send('RestartMedia', { sourceName });
 			}
 		});
-		eventSub.subscribe('channel.channel_points_custom_reward_redemption.add',
-			{ broadcaster_user_id: nodecg.bundleConfig.channelId }
-		);
+		eventSub.on('channel.raid', event => {
+			raid.value = event;
+			obs.send('RestartMedia', {sourceName: 'AAAAAAAA'});
+		});
+		eventSub.subscribe('channel.follow', subParams);
+		eventSub.subscribe('channel.subscription.message', subParams);
+		eventSub.subscribe('channel.channel_points_custom_reward_redemption.add', subParams);
+		eventSub.subscribe('channel.raid', { to_broadcaster_user_id: nodecg.bundleConfig.channelId });
 	});
 };
