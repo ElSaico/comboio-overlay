@@ -6,10 +6,12 @@ if (process.argv.length < 3) {
     process.exit(1);
 }
 
-spawn('twitch', [
+const cli = spawn('twitch', [
     'event', 'trigger', process.argv[2],
-    '-F', `http://localhost:${cfg.eventSubPort}/teswh/event`,
+    '-F', `http://localhost:${cfg.eventSub.port}/teswh/event`,
     '-t', cfg.channelId,
-    '-s', cfg.eventSubSecret,
+    '-s', cfg.eventSub.secret,
     ...process.argv.slice(3)
 ]);
+cli.stdout.on('data', data => console.log(data.toString()));
+cli.stderr.on('data', data => console.error(data.toString()));

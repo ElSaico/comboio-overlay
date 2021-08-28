@@ -37,11 +37,11 @@
         });
 
         donate.on('change', value => {
-          if (!value.name) { // TODO remove after first donation
+          if (!value.name) {
             draw('#display-donate', '', 10, 4, 5, 100);
-            return;
+          } else {
+            draw('#display-donate', `${value.name} (${currency.format(value.amount)})`, 10, 4, 5, 100);
           }
-          draw('#display-donate', `${value.name} (${currency.format(value.amount)})`, 10, 4, 5, 100);
           // TODO TTS value.message after duration of video passes
         });
 

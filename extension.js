@@ -4,6 +4,11 @@ const io = require('socket.io-client');
 const ngrok = require('ngrok');
 const TES = require('tesjs');
 
+function displayUser(name, login, anonymous) {
+	if (anonymous) return '???';
+	return /[\p{ASCII}]+/u.test(name) ? name : login;
+}
+
 module.exports = nodecg => {
 	const follower = nodecg.Replicant('follower');
 	const subscriber = nodecg.Replicant('subscriber');
@@ -17,49 +22,47 @@ module.exports = nodecg => {
 			'Client-Id': nodecg.bundleConfig.twitchApp.id
 		}
 	}).then(response => {
-		follower.value = response.data.data[0].from_name;
+		const data = response.data.data[0];
+		follower.value = displayUser(data.from_name, data.from_login);
 	});
-	axios.get(`https://api.streamelements.com/kappa/v2/sessions/${nodecg.bundleConfig.streamElements.channelId}`, {
+	axios.get(`https://api.streamelements.com/kappa/v2/activities/${nodecg.bundleConfig.streamElements.channelId}?types=cheer`, {
 		headers: {
 			Authorization: `Bearer ${nodecg.bundleConfig.streamElements.jwtToken}`
 		}
-	}).then(session => {
-		cheer.value = session.data.data['cheer-latest'];
-		donate.value = session.data.data['tip-latest'];
+	}).then(response => {
+		const data = response.data[0].data;
+		cheer.value = {
+			// TODO is that how we check for anonymous cheers?
+			name: displayUser(data.displayName, data.username, !data.providerId),
+			amount: data.amount
+		};
 	});
+	// TODO fetch latest tip
 
 	const obs = new OBSWebSocket();
 	obs.connect(nodecg.bundleConfig.obs);
-
-	function seEventListener(data) {
-		switch (data.listener) {
-			case 'cheer-latest':
-				cheer.value = data.event;
-				obs.send('RestartMedia', {sourceName: 'OH O GÁS'});
-				break;
-			case 'tip-latest':
-				donate.value = data.event;
-				obs.send('RestartMedia', {sourceName: 'OH O GÁS'});
-				break;
-		}
-	}
 
 	const elements = io('https://realtime.streamelements.com', { transports: ['websocket'] });
 	elements.on('connect', () => {
 		elements.emit('authenticate', { method: 'jwt', token: nodecg.bundleConfig.streamElements.jwtToken });
 	});
-	elements.on('event:test', seEventListener);
-	elements.on('event', seEventListener);
+	elements.on('event', data => {
+		if (data.listener === 'tip-latest') {
+			donate.value = data.event;
+			obs.send('RestartMedia', {sourceName: 'OH O GÁS'});
+		}
+	});
 
 	// TODO counters
 
-	ngrok.connect(nodecg.bundleConfig.eventSubPort).then(url => {
+	ngrok.connect(nodecg.bundleConfig.eventSub.port).then(url => {
+		console.log('ngrok connected:', url);
 		const eventSub = new TES({
 			identity: nodecg.bundleConfig.twitchApp,
 			listener: {
 				baseURL: url,
-				port: nodecg.bundleConfig.eventSubPort,
-				secret: nodecg.bundleConfig.eventSubSecret
+				port: nodecg.bundleConfig.eventSub.port,
+				secret: nodecg.bundleConfig.eventSub.secret
 			}
 		});
 		const subParams = { broadcaster_user_id: nodecg.bundleConfig.channelId };
@@ -69,13 +72,20 @@ module.exports = nodecg => {
 			});
 		});
 		eventSub.on('channel.follow', event => {
-			follower.value = event.user_name;
+			follower.value = displayUser(event.user_name, event.user_login);
 			obs.send('RestartMedia', {sourceName: 'Wololo'});
 		});
 		eventSub.on('channel.subscription.message', event => {
 			subscriber.value = event;
-			console.log(event);
+			// TODO check for non-ASCII display names
 			obs.send('RestartMedia', {sourceName: 'Heavy Metal'});
+		});
+		eventSub.on('channel.cheer', event => {
+			cheer.value = {
+				name: displayUser(event.user_name, event.user_login, event.is_anonymous),
+				amount: event.bits
+			};
+			obs.send('RestartMedia', {sourceName: 'OH O GÁS'});
 		});
 		eventSub.on('channel.channel_points_custom_reward_redemption.add', event => {
 			const sourceName = nodecg.bundleConfig.rewardMedia[event.reward.title];
@@ -85,10 +95,12 @@ module.exports = nodecg => {
 		});
 		eventSub.on('channel.raid', event => {
 			raid.value = event;
+			// TODO check for non-ASCII display names
 			obs.send('RestartMedia', {sourceName: 'AAAAAAAA'});
 		});
 		eventSub.subscribe('channel.follow', subParams);
 		eventSub.subscribe('channel.subscription.message', subParams);
+		eventSub.subscribe('channel.cheer', subParams);
 		eventSub.subscribe('channel.channel_points_custom_reward_redemption.add', subParams);
 		eventSub.subscribe('channel.raid', { to_broadcaster_user_id: nodecg.bundleConfig.channelId });
 	});
