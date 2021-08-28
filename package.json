@@ -40,5 +40,8 @@
     "obs-websocket-js": "^4.0.3",
     "socket.io-client": "^2.4.0",
     "tesjs": "^0.5.1"
+  },
+  "scripts": {
+    "sim-event": "node sim-event.js"
   }
 }
