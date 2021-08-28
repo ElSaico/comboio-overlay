@@ -3,12 +3,12 @@ body {
     width: 1920px;
     height: 1080px;
     position: absolute;
-    background-color: #f6ffc2;
+    background-color: #a8daff;
 }
 
 h3 {
     position: absolute;
-    color: #474350;
+    color: #006aba;
     width: 320px;
     font-size: 32px;
     font-family: 'Barlow', sans-serif;
@@ -68,15 +68,15 @@ svg {
 
 #counter2 {
     left: 1380px;
-    top: 939px;
+    top: 940px;
 }
 
 #counter3 {
     left: 1380px;
-    top: 978px;
+    top: 980px;
 }
 
 #counter4 {
     left: 1380px;
-    top: 1017px;
+    top: 1020px;
 }

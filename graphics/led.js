@@ -128,8 +128,8 @@ const chars = [
     [ 0x6E, 0x3B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ],   // U+007E (~)
     [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]    // U+007F
 ];
-const ledOn = '#F8A94F';
-const ledOff = '#474350';
+const ledOn = '#ff9900';
+const ledOff = '#003f6e';
 
 function makeTextArray(text) {
     const array = text.split('').map(char => chars[char.charCodeAt()]);
@@ -138,7 +138,7 @@ function makeTextArray(text) {
 
 function draw(el, text, length, ledWidth, ledHeight, interval) {
     let offset = 0;
-    const svg = SVG(el).clear().size(ledWidth*length*8, ledHeight*8).css({ 'background-color': 'black' });
+    const svg = SVG(el).clear().size(ledWidth*length*8, ledHeight*8).css({ 'background-color': '#000' });
     const leds = [];
     const textArray = makeTextArray(text+' ');
     const maxRow = Math.max(textArray[0].length, length);
