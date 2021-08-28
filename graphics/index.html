@@ -15,6 +15,7 @@
       const donate = nodecg.Replicant('donate');
       const raid = nodecg.Replicant('raid');
       const meudeus = nodecg.Replicant('meudeus');
+      const meudeusAudio = new Audio('audios/meu-deus-tio-phil.ogg');
 
       document.addEventListener('DOMContentLoaded', async () => {
         draw('#counter1', 'Meu Deus ####', 13, 5, 5);
@@ -52,7 +53,7 @@
         meudeus.on('change', value => {
           console.log(`Meu Deus ${value}`);
           draw('#counter1', `Meu Deus ${value.toString().padStart(4)}`, 13, 5, 5);
-          // TODO play audio
+          meudeusAudio.play();
         });
       });
     </script>

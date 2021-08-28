@@ -3,6 +3,7 @@ const OBSWebSocket = require('obs-websocket-js');
 const io = require('socket.io-client');
 const ngrok = require('ngrok');
 const TES = require('tesjs');
+const tmi = require('tmi.js');
 
 function displayUser(name, login, anonymous) {
 	if (anonymous) return '???';
@@ -15,6 +16,8 @@ module.exports = nodecg => {
 	const cheer = nodecg.Replicant('cheer');
 	const donate = nodecg.Replicant('donate');
 	const raid = nodecg.Replicant('raid');
+	const meudeus = nodecg.Replicant('meudeus');
+	let meudeusNow = 0;
 
 	axios.get(`https://api.twitch.tv/helix/users/follows?to_id=${nodecg.bundleConfig.channelId}`, {
 		headers: {
@@ -52,8 +55,6 @@ module.exports = nodecg => {
 			obs.send('RestartMedia', {sourceName: 'OH O GÁS'});
 		}
 	});
-
-	// TODO counters
 
 	ngrok.connect(nodecg.bundleConfig.eventSub.port).then(url => {
 		console.log('ngrok connected:', url);
@@ -103,5 +104,26 @@ module.exports = nodecg => {
 		eventSub.subscribe('channel.cheer', subParams);
 		eventSub.subscribe('channel.channel_points_custom_reward_redemption.add', subParams);
 		eventSub.subscribe('channel.raid', { to_broadcaster_user_id: nodecg.bundleConfig.channelId });
+	});
+
+	const chat = new tmi.Client({
+		connection: {
+			reconnect: true,
+			secure: true
+		},
+		identity: nodecg.bundleConfig.chat,
+		channels: [ nodecg.bundleConfig.chat.username ]
+	});
+	chat.connect();
+	chat.on('message', (channel, tags, message, self) => {
+		if (self || !message.startsWith('!')) return;
+		const args = message.slice(1).split(' ');
+		const command = args.shift().toLowerCase();
+
+		if (command === 'meudeus') { // hardcoding this to make it work ASAP
+			meudeus.value++;
+			meudeusNow++;
+			chat.say(channel, `Meu Deus! Já são ${meudeus.value} comentários infames nas lives do Comboio, incluindo ${meudeusNow} só nesta!`);
+		}
 	});
 };

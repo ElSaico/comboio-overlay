@@ -39,7 +39,8 @@
     "ngrok": "^4.1.0",
     "obs-websocket-js": "^4.0.3",
     "socket.io-client": "^2.4.0",
-    "tesjs": "^0.5.1"
+    "tesjs": "^0.5.1",
+    "tmi.js": "^1.8.5"
   },
   "scripts": {
     "sim-event": "node sim-event.js"
