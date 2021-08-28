@@ -27,7 +27,7 @@ module.exports = nodecg => {
 	obs.connect(nodecg.bundleConfig.obs);
 
 	function seEventListener(data) {
-		// TODO use StreamElements API only for tracking tips, replace rest with subscriptions
+		// TODO use StreamElements API only for tracking tips, replace rest with EventSub
 		switch (data.listener) {
 			case 'follower-latest':
 				follower.value = data.event;
