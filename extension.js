@@ -1,3 +1,5 @@
+const process = require('process');
+
 const axios = require('axios');
 const OBSWebSocket = require('obs-websocket-js');
 const io = require('socket.io-client');
@@ -31,6 +33,9 @@ module.exports = nodecg => {
 	}).then(response => {
 		const data = response.data.data[0];
 		follower.value = displayUser(data.from_name, data.from_login);
+	}).catch(err => {
+		console.error('Error on calling Twitch Helix API:', err.response.data);
+		process.exit(1);
 	});
 	axios.get(`https://api.streamelements.com/kappa/v2/activities/${config.streamElements.channelId}?types=cheer`, {
 		headers: {
@@ -47,7 +52,11 @@ module.exports = nodecg => {
 	// TODO fetch latest tip
 
 	const obs = new OBSWebSocket();
-	obs.connect(config.obs);
+	obs.connect(config.obs)
+		.catch(err => {
+			console.error('Error on connecting to OBS:', err);
+			process.exit(1);
+		});
 
 	const elements = io('https://realtime.streamelements.com', { transports: ['websocket'] });
 	elements.on('connect', () => {
