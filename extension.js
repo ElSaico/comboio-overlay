@@ -89,9 +89,14 @@ module.exports = nodecg => {
 			follower.value = displayUser(event.user_name, event.user_login);
 			obs.send('RestartMedia', {sourceName: 'Wololo'});
 		});
-		eventSub.on('channel.subscription.message', event => {
+		eventSub.on('channel.subscribe', event => {
+			event.value.user_name = displayUser(event.user_name, event.user_login);
 			subscriber.value = event;
-			// TODO check for non-ASCII display names
+			obs.send('RestartMedia', {sourceName: 'Heavy Metal'});
+		});
+		eventSub.on('channel.subscription.message', event => {
+			event.value.user_name = displayUser(event.user_name, event.user_login);
+			subscriber.value = event;
 			obs.send('RestartMedia', {sourceName: 'Heavy Metal'});
 		});
 		eventSub.on('channel.cheer', event => {
@@ -108,11 +113,12 @@ module.exports = nodecg => {
 			}
 		});
 		eventSub.on('channel.raid', event => {
+			event.value.from_broadcaster_user_name = displayUser(event.from_broadcaster_user_name, event.from_broadcaster_user_login);
 			raid.value = event;
-			// TODO check for non-ASCII display names
 			obs.send('RestartMedia', {sourceName: 'AAAAAAAA'});
 		});
 		eventSub.subscribe('channel.follow', subParams);
+		eventSub.subscribe('channel.subscribe', subParams);
 		eventSub.subscribe('channel.subscription.message', subParams);
 		eventSub.subscribe('channel.cheer', subParams);
 		eventSub.subscribe('channel.channel_points_custom_reward_redemption.add', subParams);
