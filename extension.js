@@ -166,5 +166,5 @@ module.exports = nodecg => {
 		res.send('The pimba is being taken care of; you can close this now');
 	});
 	nodecg.mount(router);
-	open(spotify.createAuthorizeURL(['user-read-currently-playing', 'user-read-playback-state'], config.spotify.state));
+	open(spotify.createAuthorizeURL(['user-read-currently-playing'], config.spotify.state));
 };
