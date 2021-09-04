@@ -14,15 +14,9 @@
       const cheer = nodecg.Replicant('cheer');
       const donate = nodecg.Replicant('donate');
       const raid = nodecg.Replicant('raid');
-      const meudeus = nodecg.Replicant('meudeus');
-      const meudeusAudio = new Audio('audios/meu-deus-tio-phil.ogg');
+      const counters = nodecg.Replicant('counters');
 
       document.addEventListener('DOMContentLoaded', async () => {
-        draw('#counter1', 'Meu Deus ####', 13, 5, 5);
-        draw('#counter2', '', 13, 5, 5);
-        draw('#counter3', '', 13, 5, 5);
-        draw('#counter4', '', 13, 5, 5);
-
         follower.on('change', value => {
           draw('#display-follower', value, 10, 4, 5, 100);
         });
@@ -50,10 +44,12 @@
           console.log(value);
         });
 
-        meudeus.on('change', value => {
-          console.log(`Meu Deus ${value}`);
-          draw('#counter1', `Meu Deus ${value.toString().padStart(4)}`, 13, 5, 5);
-          meudeusAudio.play();
+        counters.on('change', value => {
+          const visible = value.filter(counter => counter.show);
+          for (let i = 0; i < 4; ++i) {
+            const label = visible[i] ? `!${visible[i].command.padEnd(7)} ${visible[i].count.toString().padStart(4)}` : '';
+            draw(`#counter${i+1}`, label, 13, 5, 5);
+          }
         });
       });
     </script>

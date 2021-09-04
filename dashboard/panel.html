@@ -9,7 +9,10 @@
 	<script type="text/javascript" src="../node_modules/jsonform/lib/jsonform.js"></script>
 </head>
 <body>
-	<form id="counters" class="container"></form>
+  <div class="container">
+    <h2>Counters</h1>
+	  <form id="counters"></form>
+  </div>
 	<script type="text/javascript">
     const counters = nodecg.Replicant('counters');
     counters.on('change', value => {

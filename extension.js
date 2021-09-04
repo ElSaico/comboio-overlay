@@ -22,8 +22,6 @@ module.exports = nodecg => {
 	const donate = nodecg.Replicant('donate');
 	const raid = nodecg.Replicant('raid');
 	const track = nodecg.Replicant('track');
-	const meudeus = nodecg.Replicant('meudeus');
-	let meudeusNow = 0;
 
 	axios.get(`https://api.twitch.tv/helix/users/follows?to_id=${config.channelId}`, {
 		headers: {
@@ -138,11 +136,12 @@ module.exports = nodecg => {
 		if (self || !message.startsWith('!')) return;
 		const args = message.slice(1).split(' ');
 		const command = args.shift().toLowerCase();
-
-		if (command === 'meudeus') { // hardcoding this to make it work ASAP
-			meudeus.value++;
-			meudeusNow++;
-			chat.say(channel, `Meu Deus! Já são ${meudeus.value} comentários infames nas lives do Comboio, incluindo ${meudeusNow} só nesta!`);
+		const counter = nodecg.readReplicant('counters').find(counter => counter.command === command);
+		if (counter && counter.show) {
+			counter.count++;
+			if (counter.message) {
+				chat.say(channel, counter.message.replace('####', counter.count));
+			}
 		}
 	});
 
