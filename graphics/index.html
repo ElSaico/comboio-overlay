@@ -18,15 +18,18 @@
 
       document.addEventListener('DOMContentLoaded', async () => {
         follower.on('change', value => {
+          nodecg.log.debug('updated follower:', value);
           draw('#display-follower', value, 10, 4, 5, 100);
         });
 
         subscriber.on('change', value => {
+          nodecg.log.debug('updated subscriber:', value);
           draw('#display-subscriber', value.user_name, 10, 4, 5, 100);
           // TODO TTS value.message.text after duration of video passes
         });
 
         cheer.on('change', value => {
+          nodecg.log.debug('updated cheer:', value);
           draw('#display-cheer', `${value.name} (${value.amount})`, 10, 4, 5, 100);
           // TODO TTS value.message after duration of video passes
         });
@@ -35,13 +38,14 @@
           if (!value.name) {
             draw('#display-donate', '', 10, 4, 5, 100);
           } else {
+            nodecg.log.debug('updated donate:', value);
             draw('#display-donate', `${value.name} (${currency.format(value.amount)})`, 10, 4, 5, 100);
           }
           // TODO TTS value.message after duration of video passes
         });
 
         raid.on('change', value => {
-          console.log(value);
+          nodecg.log.debug('updated raid:', value);
         });
 
         counters.on('change', value => {

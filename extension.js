@@ -9,6 +9,8 @@ const tmi = require('tmi.js');
 const open = require('open');
 const SpotifyWebApi = require('spotify-web-api-node');
 
+const autoShDelay = 5000;
+
 function displayUser(name, login, anonymous) {
 	if (anonymous) return '???';
 	return /[\p{ASCII}]+/u.test(name) ? name : login;
@@ -29,10 +31,11 @@ module.exports = nodecg => {
 			'Client-Id': config.twitchApp.id
 		}
 	}).then(response => {
+		nodecg.log.debug('Initializing follow via Twitch Helix API');
 		const data = response.data.data[0];
 		follower.value = displayUser(data.from_name, data.from_login);
 	}).catch(err => {
-		console.error('Error on calling Twitch Helix API:', err.response.data);
+		nodecg.log.error('Error on calling Twitch Helix API:', err.response.data);
 		process.exit(1);
 	});
 	axios.get(`https://api.streamelements.com/kappa/v2/activities/${config.streamElements.channelId}?types=cheer`, {
@@ -40,6 +43,7 @@ module.exports = nodecg => {
 			Authorization: `Bearer ${config.streamElements.jwtToken}`
 		}
 	}).then(response => {
+		nodecg.log.debug('Initializing donate via StreamElements API');
 		const data = response.data[0].data;
 		cheer.value = {
 			// TODO is that how we check for anonymous cheers?
@@ -52,7 +56,7 @@ module.exports = nodecg => {
 	const obs = new OBSWebSocket();
 	obs.connect(config.obs)
 		.catch(err => {
-			console.error('Error on connecting to OBS:', err);
+			nodecg.log.error('Error on connecting to OBS:', err);
 			process.exit(1);
 		});
 
@@ -62,13 +66,14 @@ module.exports = nodecg => {
 	});
 	elements.on('event', data => {
 		if (data.listener === 'tip-latest') {
+			nodecg.log.debug('Received tip via StreamElements:', data);
 			donate.value = data.event;
 			obs.send('RestartMedia', {sourceName: 'OH O GÁS'});
 		}
 	});
 
 	ngrok.connect(config.eventSub.port).then(url => {
-		console.log('ngrok connected:', url);
+		nodecg.log.info('ngrok connected:', url);
 		const eventSub = new TES({
 			identity: config.twitchApp,
 			listener: {
@@ -83,21 +88,26 @@ module.exports = nodecg => {
 				eventSub.unsubscribe(sub.id);
 			});
 		});
+		// TODO queue up events
 		eventSub.on('channel.follow', event => {
+			nodecg.log.debug('received channel.follow:', event);
 			follower.value = displayUser(event.user_name, event.user_login);
 			obs.send('RestartMedia', {sourceName: 'Wololo'});
 		});
 		eventSub.on('channel.subscribe', event => {
+			nodecg.log.debug('received channel.subscribe:', event);
 			event.value.user_name = displayUser(event.user_name, event.user_login);
 			subscriber.value = event;
 			obs.send('RestartMedia', {sourceName: 'Heavy Metal'});
 		});
 		eventSub.on('channel.subscription.message', event => {
+			nodecg.log.debug('received channel.subscription.message:', event);
 			event.value.user_name = displayUser(event.user_name, event.user_login);
 			subscriber.value = event;
 			obs.send('RestartMedia', {sourceName: 'Heavy Metal'});
 		});
 		eventSub.on('channel.cheer', event => {
+			nodecg.log.debug('received channel.cheer:', event);
 			cheer.value = {
 				name: displayUser(event.user_name, event.user_login, event.is_anonymous),
 				amount: event.bits
@@ -105,12 +115,14 @@ module.exports = nodecg => {
 			obs.send('RestartMedia', {sourceName: 'OH O GÁS'});
 		});
 		eventSub.on('channel.channel_points_custom_reward_redemption.add', event => {
+			nodecg.log.debug('received channel.channel_points_custom_reward_redemption.add:', event);
 			const sourceName = config.rewardMedia[event.reward.title];
 			if (sourceName) {
 				obs.send('RestartMedia', { sourceName });
 			}
 		});
 		eventSub.on('channel.raid', event => {
+			nodecg.log.debug('received channel.raid:', event);
 			event.value.from_broadcaster_user_name = displayUser(event.from_broadcaster_user_name, event.from_broadcaster_user_login);
 			raid.value = event;
 			obs.send('RestartMedia', {sourceName: 'AAAAAAAA'});
@@ -149,19 +161,26 @@ module.exports = nodecg => {
 	const router = nodecg.Router();
 	router.get('/spotify', async (req, res) => {
 		const data = await spotify.authorizationCodeGrant(req.query.code);
+		let expireTime = new Date().getTime() + data.body.expires_in*1000;
 		spotify.setAccessToken(data.body.access_token);
 		spotify.setRefreshToken(data.body.refresh_token);
 		setInterval(async () => {
+			if ((expireTime - new Date().getTime()) <= config.spotify.pollTime) {
+				spotify.refreshAccessToken().then(data => {
+					nodecg.log.info('Spotify token successfully refreshed');
+					expireTime = new Date().getTime() + data.body.expires_in*1000;
+				});
+			}
 			const playing = await spotify.getMyCurrentPlayingTrack();
 			if (playing.statusCode === 200 && track.value.id !== playing.body.item.id) {
 				track.value = playing.body.item;
-				console.log(`Now playing: ${track.value.artists.map(artist => artist.name).join(', ')} -  ${track.value.name}`);
+				nodecg.log.info(`Now playing: ${track.value.artists.map(artist => artist.name).join(', ')} -  ${track.value.name}`);
 				if (config.spotify.autoSh[track.value.id]) {
-					console.log('AutoPimba identificada:', config.spotify.autoSh[track.value.id]);
-					setTimeout(() => chat.say(config.chat.username, `!sh ${config.spotify.autoSh[track.value.id]} #autopimba`), 5000);
+					nodecg.log.info('AutoPimba identified:', config.spotify.autoSh[track.value.id]);
+					setTimeout(() => chat.say(config.chat.username, `!sh ${config.spotify.autoSh[track.value.id]} #autopimba`), autoShDelay);
 				}
 			}
-		}, 5000);
+		}, config.spotify.pollTime);
 		res.send('The pimba is being taken care of; you can close this now');
 	});
 	nodecg.mount(router);
