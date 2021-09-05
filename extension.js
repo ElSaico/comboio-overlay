@@ -167,6 +167,8 @@ module.exports = nodecg => {
 		setInterval(async () => {
 			if ((expireTime - new Date().getTime()) <= config.spotify.pollTime) {
 				spotify.refreshAccessToken().then(data => {
+					spotify.setAccessToken(data.body.access_token);
+					spotify.setRefreshToken(data.body.refresh_token);
 					nodecg.log.info('Spotify token successfully refreshed');
 					expireTime = new Date().getTime() + data.body.expires_in*1000;
 				});
