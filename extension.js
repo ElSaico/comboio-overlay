@@ -141,7 +141,7 @@ module.exports = nodecg => {
 			secure: true
 		},
 		identity: config.chat,
-		channels: [ config.chat.username ]
+		channels: [ config.chat.channel ]
 	});
 	chat.connect();
 	chat.on('message', (channel, tags, message, self) => {
@@ -179,7 +179,7 @@ module.exports = nodecg => {
 				nodecg.log.info(`Now playing: ${track.value.artists.map(artist => artist.name).join(', ')} -  ${track.value.name}`);
 				if (config.spotify.autoSh[track.value.id]) {
 					nodecg.log.info('AutoPimba identified:', config.spotify.autoSh[track.value.id]);
-					setTimeout(() => chat.say(config.chat.username, `!sh ${config.spotify.autoSh[track.value.id]} #autopimba`), autoShDelay);
+					setTimeout(() => chat.say(config.chat.channel, `!sh ${config.spotify.autoSh[track.value.id]} #autopimba`), autoShDelay);
 				}
 			}
 		}, config.spotify.pollTime);
