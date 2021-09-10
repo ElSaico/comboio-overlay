@@ -96,13 +96,13 @@ module.exports = nodecg => {
 		});
 		eventSub.on('channel.subscribe', event => {
 			nodecg.log.debug('received channel.subscribe:', event);
-			event.value.user_name = displayUser(event.user_name, event.user_login);
+			event.user_name = displayUser(event.user_name, event.user_login);
 			subscriber.value = event;
 			obs.send('RestartMedia', {sourceName: 'Heavy Metal'});
 		});
 		eventSub.on('channel.subscription.message', event => {
 			nodecg.log.debug('received channel.subscription.message:', event);
-			event.value.user_name = displayUser(event.user_name, event.user_login);
+			event.user_name = displayUser(event.user_name, event.user_login);
 			subscriber.value = event;
 			obs.send('RestartMedia', {sourceName: 'Heavy Metal'});
 		});
@@ -123,7 +123,7 @@ module.exports = nodecg => {
 		});
 		eventSub.on('channel.raid', event => {
 			nodecg.log.debug('received channel.raid:', event);
-			event.value.from_broadcaster_user_name = displayUser(event.from_broadcaster_user_name, event.from_broadcaster_user_login);
+			event.from_broadcaster_user_name = displayUser(event.from_broadcaster_user_name, event.from_broadcaster_user_login);
 			raid.value = event;
 			obs.send('RestartMedia', {sourceName: 'AAAAAAAA'});
 		});
