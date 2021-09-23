@@ -6,8 +6,7 @@ const io = require('socket.io-client');
 const ngrok = require('ngrok');
 const TES = require('tesjs');
 const tmi = require('tmi.js');
-const open = require('open');
-const SpotifyWebApi = require('spotify-web-api-node');
+const discordjs = require('discord.js');
 
 const autoShDelay = 5000;
 
@@ -157,34 +156,18 @@ module.exports = nodecg => {
 		}
 	});
 
-	const spotify = new SpotifyWebApi(config.spotify.credentials);
-	const router = nodecg.Router();
-	router.get('/spotify', async (req, res) => {
-		const data = await spotify.authorizationCodeGrant(req.query.code);
-		let expireTime = new Date().getTime() + data.body.expires_in*1000;
-		spotify.setAccessToken(data.body.access_token);
-		spotify.setRefreshToken(data.body.refresh_token);
-		setInterval(async () => {
-			if ((expireTime - new Date().getTime()) <= config.spotify.pollTime) {
-				spotify.refreshAccessToken().then(data => {
-					spotify.setAccessToken(data.body.access_token);
-					spotify.setRefreshToken(data.body.refresh_token);
-					nodecg.log.info('Spotify token successfully refreshed');
-					expireTime = new Date().getTime() + data.body.expires_in*1000;
-				});
-			}
-			const playing = await spotify.getMyCurrentPlayingTrack();
-			if (playing.statusCode === 200 && track.value.id !== playing.body.item.id) {
-				track.value = playing.body.item;
-				nodecg.log.info(`Now playing: ${track.value.artists.map(artist => artist.name).join(', ')} -  ${track.value.name}`);
-				if (config.spotify.autoSh[track.value.id]) {
-					nodecg.log.info('AutoPimba identified:', config.spotify.autoSh[track.value.id]);
-					setTimeout(() => chat.say(config.chat.channel, `!sh ${config.spotify.autoSh[track.value.id]} #autopimba`), autoShDelay);
-				}
-			}
-		}, config.spotify.pollTime);
-		res.send('The pimba is being taken care of; you can close this now');
+	const discord = new discordjs.Client({ intents: [discordjs.Intents.FLAGS.GUILDS, discordjs.Intents.FLAGS.GUILD_MESSAGES] });
+	discord.once('ready', () => {
+		nodecg.log.info('Discord bot is up and running');
 	});
-	nodecg.mount(router);
-	open(spotify.createAuthorizeURL(['user-read-currently-playing'], config.spotify.state));
+	discord.on('messageCreate', message => {
+		if (message.author.id === config.discord.hydraId && message.embeds.length > 0 && message.embeds[0].title === 'Tocando agora') {
+			nodecg.log.info('Now playing:', message.embeds[0].description);
+			if (config.discord.autoSh[message.embeds[0].description]) {
+				nodecg.log.info('AutoPimba identified:', config.discord.autoSh[message.embeds[0].description]);
+				setTimeout(() => chat.say(config.chat.channel, `!sh ${config.discord.autoSh[message.embeds[0].description]} #autopimba`), autoShDelay);
+			}
+		}
+	});
+	discord.login(config.discord.token);
 };
