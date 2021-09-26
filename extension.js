@@ -42,11 +42,10 @@ module.exports = nodecg => {
 			Authorization: `Bearer ${config.streamElements.jwtToken}`
 		}
 	}).then(response => {
-		nodecg.log.debug('Initializing donate via StreamElements API');
+		nodecg.log.debug('Initializing cheer via StreamElements API');
 		const data = response.data[0].data;
 		cheer.value = {
-			// TODO is that how we check for anonymous cheers?
-			name: displayUser(data.displayName, data.username, !data.providerId),
+			name: displayUser(data.displayName, data.username),
 			amount: data.amount
 		};
 	});
