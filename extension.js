@@ -7,6 +7,7 @@ const ngrok = require('ngrok');
 const TES = require('tesjs');
 const tmi = require('tmi.js');
 const discordjs = require('discord.js');
+const googleTTS = require('@google-cloud/text-to-speech');
 
 const autoShDelay = 5000;
 

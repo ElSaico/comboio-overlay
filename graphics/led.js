@@ -130,7 +130,6 @@ const chars = [
 ];
 const ledOn = '#ff9900';
 const ledOff = '#444444';
-//const ledOff = '#003f6e';
 
 function makeTextArray(text) {
     const array = text.split('').map(char => chars[char.charCodeAt()]);

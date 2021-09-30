@@ -33,6 +33,7 @@
   "repository": "https://github.com/ElSaico/comboio-overlay.git",
   "license": "MPL-2.0",
   "dependencies": {
+    "@google-cloud/text-to-speech": "^3.3.1",
     "@svgdotjs/svg.js": "^3.1.1",
     "axios": "^0.21.1",
     "discord.js": "^13.1.0",
