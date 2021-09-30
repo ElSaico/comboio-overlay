@@ -71,13 +71,13 @@ module.exports = nodecg => {
 		}
 	});
 
-	ngrok.connect(config.eventSub.port).then(url => {
+	ngrok.connect({ addr: config.ngrok.port, authtoken: config.ngrok.authToken }).then(url => {
 		nodecg.log.info('ngrok connected:', url);
 		const eventSub = new TES({
 			identity: config.twitchApp,
 			listener: {
 				baseURL: url,
-				port: config.eventSub.port,
+				port: config.ngrok.port,
 				secret: config.eventSub.secret
 			}
 		});
