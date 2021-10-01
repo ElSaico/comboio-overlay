@@ -13,6 +13,7 @@
       const subscriber = nodecg.Replicant('subscriber');
       const cheer = nodecg.Replicant('cheer');
       const raid = nodecg.Replicant('raid');
+      const track = nodecg.Replicant('track');
       const counters = nodecg.Replicant('counters');
 
       document.addEventListener('DOMContentLoaded', async () => {
@@ -37,6 +38,11 @@
           nodecg.log.debug('updated raid:', value);
         });
 
+        track.on('change', value => {
+          nodecg.log.debug('updated track:', value);
+          draw('#display-track', value, 10, 4, 5, 100);
+        });
+
         counters.on('change', value => {
           const visible = value.filter(counter => counter.show);
           for (let i = 0; i < 4; ++i) {
@@ -59,7 +65,7 @@
     <svg id="display-subscriber"></svg>
     <h3 id="label-cheer">Últimos bits</h3>
     <svg id="display-cheer"></svg>
-    <h3 id="label-donate">Última doação</h3>
-    <svg id="display-donate"></svg>
+    <h3 id="label-track">Tocando</h3>
+    <svg id="display-track"></svg>
   </body>
 </html>

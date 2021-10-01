@@ -147,10 +147,11 @@ module.exports = nodecg => {
 	});
 	discord.on('messageCreate', message => {
 		if (message.author.id === config.discord.hydraId && message.embeds.length > 0 && message.embeds[0].title === 'Tocando agora') {
-			nodecg.log.info('Now playing:', message.embeds[0].description);
-			if (config.discord.autoSh[message.embeds[0].description]) {
-				nodecg.log.info('AutoPimba identified:', config.discord.autoSh[message.embeds[0].description]);
-				setTimeout(() => chat.say(config.chat.channel, `!sh ${config.discord.autoSh[message.embeds[0].description]} #autopimba`), autoShDelay);
+			const nowPlaying = message.embeds[0].description;
+			track.value = nowPlaying;
+			if (config.discord.autoSh[nowPlaying]) {
+				nodecg.log.info('AutoPimba identified:', config.discord.autoSh[nowPlaying]);
+				setTimeout(() => chat.say(config.chat.channel, `!sh ${config.discord.autoSh[nowPlaying]} #autopimba`), autoShDelay);
 			}
 		}
 	});
