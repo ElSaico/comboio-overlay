@@ -2,7 +2,6 @@ const process = require('process');
 
 const axios = require('axios');
 const OBSWebSocket = require('obs-websocket-js');
-const io = require('socket.io-client');
 const ngrok = require('ngrok');
 const TES = require('tesjs');
 const tmi = require('tmi.js');
@@ -21,7 +20,6 @@ module.exports = nodecg => {
 	const follower = nodecg.Replicant('follower');
 	const subscriber = nodecg.Replicant('subscriber');
 	const cheer = nodecg.Replicant('cheer');
-	const donate = nodecg.Replicant('donate');
 	const raid = nodecg.Replicant('raid');
 	const track = nodecg.Replicant('track');
 
@@ -50,7 +48,6 @@ module.exports = nodecg => {
 			amount: data.amount
 		};
 	});
-	// TODO fetch latest tip
 
 	const obs = new OBSWebSocket();
 	obs.connect(config.obs)
@@ -58,18 +55,6 @@ module.exports = nodecg => {
 			nodecg.log.error('Error on connecting to OBS:', err);
 			process.exit(1);
 		});
-
-	const elements = io('https://realtime.streamelements.com', { transports: ['websocket'] });
-	elements.on('connect', () => {
-		elements.emit('authenticate', { method: 'jwt', token: config.streamElements.jwtToken });
-	});
-	elements.on('event', data => {
-		if (data.listener === 'tip-latest') {
-			nodecg.log.debug('Received tip via StreamElements:', data);
-			donate.value = data.event;
-			obs.send('RestartMedia', {sourceName: 'OH O GÁS'});
-		}
-	});
 
 	ngrok.connect({ addr: config.ngrok.port, authtoken: config.ngrok.authToken }).then(url => {
 		nodecg.log.info('ngrok connected:', url);
