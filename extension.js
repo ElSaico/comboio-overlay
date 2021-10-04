@@ -144,6 +144,7 @@ module.exports = nodecg => {
 	const discord = new discordjs.Client({ intents: [discordjs.Intents.FLAGS.GUILDS, discordjs.Intents.FLAGS.GUILD_MESSAGES] });
 	discord.once('ready', () => {
 		nodecg.log.info('Discord bot is up and running');
+		track.value = '';
 	});
 	discord.on('messageCreate', message => {
 		if (message.author.id === config.discord.hydraId && message.embeds.length > 0 && message.embeds[0].title === 'Tocando agora') {
