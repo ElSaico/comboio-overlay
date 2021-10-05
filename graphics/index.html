@@ -25,18 +25,18 @@
 
         follower.on('change', value => {
           nodecg.log.debug('updated follower:', value);
-          panelFollower.drawLoop(value, 100);
+          panelFollower.drawLoopable(value, 100);
         });
 
         subscriber.on('change', value => {
           nodecg.log.debug('updated subscriber:', value);
-          panelSubscriber.drawLoop(value.user_name, 100);
+          panelSubscriber.drawLoopable(value.user_name, 100);
           // TODO TTS value.message.text after duration of video passes
         });
 
         cheer.on('change', value => {
           nodecg.log.debug('updated cheer:', value);
-          panelCheer.drawLoop(`${value.name} (${value.amount})`, 100);
+          panelCheer.drawLoopable(`${value.name} (${value.amount})`, 100);
           // TODO TTS value.message after duration of video passes
         });
 
@@ -46,14 +46,14 @@
 
         track.on('change', value => {
           nodecg.log.debug('updated track:', value);
-          panelTrack.drawLoop(value, 100);
+          panelTrack.drawLoopable(value, 100);
         });
 
         counters.on('change', value => {
           const visible = value.filter(counter => counter.show);
           for (let i = 0; i < 4; ++i) {
             const label = visible[i] ? `!${visible[i].command.padEnd(7)} ${visible[i].count.toString().padStart(4)}` : '';
-            panelCounters[i].drawLoop(label);
+            panelCounters[i].drawLoopable(label);
           }
         });
       });

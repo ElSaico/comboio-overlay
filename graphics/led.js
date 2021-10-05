@@ -274,15 +274,31 @@ class LEDPanel {
         }
     }
 
+    clearRow(row) {
+        this.leds[row].forEach(led => led.fill(LEDPanel.#ledOff));
+    }
+
+    buildTextMatrix(text) {
+        this.textMatrix = _.zip(...text.split('').map(char => LEDPanel.#font[char.charCodeAt()]));
+    }
+
+    centerOffset(text) {
+        return (text.length - this.length) * 4;
+    }
+
+    drawLed(row, colPanel, colText) {
+        if ((this.textMatrix[row][Math.floor(colText/8)] >> colText%8) & 1) {
+            this.leds[row][colPanel].fill(LEDPanel.#ledOn);
+        } else {
+            this.leds[row][colPanel].fill(LEDPanel.#ledOff);
+        }
+    }
+
     drawRow(row, offset, drawLength) {
-        this.leds[row].forEach((led, col) => {
-            let trueCol = (col + offset) % (drawLength * 8);
-            if ((this.textArray[row][Math.floor(trueCol/8)] >> trueCol%8) & 1) {
-                led.fill(LEDPanel.#ledOn);
-            } else {
-                led.fill(LEDPanel.#ledOff);
-            }
-        });
+        for (let col = 0; col < this.length*8; ++col) {
+            let colText = (col + offset) % (drawLength * 8);
+            this.drawLed(row, col, colText);
+        }
     }
 
     drawStep(offset, drawLength) {
@@ -291,13 +307,33 @@ class LEDPanel {
         }
     }
 
-    drawLoop(text, interval) {
-        this.textArray = _.zip(...text.split('').map(char => LEDPanel.#font[char.charCodeAt()]));
+    drawLoopable(text, interval) {
+        this.buildTextMatrix(text);
         if (text.length > this.length) {
             let offset = 0;
             setInterval(() => this.drawStep(offset++, text.length+1), interval);
         } else {
-            this.drawStep((text.length - this.length) * 4, this.length);
+            this.drawStep(this.centerOffset(text), this.length);
+        }
+    }
+
+    async drawScroll(text, interval) {
+        this.buildTextMatrix(text);
+        for (let offset = -this.length*8; offset <= text.length*8; ++offset) {
+            this.drawStep(offset, text.length+this.length);
+            await new Promise(cb => setTimeout(cb, interval));
+        }
+    }
+
+    async drawAndClearVertical(text, interval) {
+        this.buildTextMatrix(text);
+        for (let row = 0; row < 8; ++row) {
+            this.drawRow(row, this.centerOffset(text), this.length);
+            await new Promise(cb => setTimeout(cb, interval));
+        }
+        for (let row = 0; row < 8; ++row) {
+            await new Promise(cb => setTimeout(cb, interval));
+            this.clearRow(row);
         }
     }
 }
