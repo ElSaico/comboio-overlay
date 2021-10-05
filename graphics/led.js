@@ -266,25 +266,29 @@ class LEDPanel {
         this.svg = SVG(el).clear().size(ledWidth*length*8, ledHeight*8).css({ 'background-color': '#000' });
         this.length = length;
 
-        for (let i = 0; i < length*8; ++i) {
+        for (let row = 0; row < 8; ++row) {
             this.leds.push([]);
-            for (let j = 0; j < 8; ++j) {
-                this.leds[i].push(this.svg.ellipse(ledWidth, ledHeight).fill(LEDPanel.#ledOff).move(ledWidth*i, ledHeight*j));
+            for (let col = 0; col < length*8; ++col) {
+                this.leds[row].push(this.svg.ellipse(ledWidth, ledHeight).fill(LEDPanel.#ledOff).move(ledWidth*col, ledHeight*row));
             }
         }
     }
 
-    drawStep(offset, maxRow) {
-        this.leds.map((row, i) => {
-            let trueI = (i + offset) % (maxRow * 8);
-            row.map((led, j) => {
-                if ((this.textArray[j][Math.floor(trueI/8)] >> trueI%8) & 1) {
-                    led.fill(LEDPanel.#ledOn);
-                } else {
-                    led.fill(LEDPanel.#ledOff);
-                }
-            });
+    drawRow(row, offset, drawLength) {
+        this.leds[row].forEach((led, col) => {
+            let trueCol = (col + offset) % (drawLength * 8);
+            if ((this.textArray[row][Math.floor(trueCol/8)] >> trueCol%8) & 1) {
+                led.fill(LEDPanel.#ledOn);
+            } else {
+                led.fill(LEDPanel.#ledOff);
+            }
         });
+    }
+
+    drawStep(offset, drawLength) {
+        for (let row = 0; row < 8; ++row) {
+            this.drawRow(row, offset, drawLength);
+        }
     }
 
     drawLoop(text, interval) {
