@@ -17,20 +17,26 @@
       const counters = nodecg.Replicant('counters');
 
       document.addEventListener('DOMContentLoaded', async () => {
+        const panelFollower = new LEDPanel('#display-follower', 10, 4, 5);
+        const panelSubscriber = new LEDPanel('#display-subscriber', 10, 4, 5);
+        const panelCheer = new LEDPanel('#display-cheer', 10, 4, 5);
+        const panelTrack = new LEDPanel('#display-track', 10, 4, 5);
+        const panelCounters = _.range(4).map(i => new LEDPanel(`#counter${i+1}`, 13, 5, 5));
+
         follower.on('change', value => {
           nodecg.log.debug('updated follower:', value);
-          draw('#display-follower', value, 10, 4, 5, 100);
+          panelFollower.drawLoop(value, 100);
         });
 
         subscriber.on('change', value => {
           nodecg.log.debug('updated subscriber:', value);
-          draw('#display-subscriber', value.user_name, 10, 4, 5, 100);
+          panelSubscriber.drawLoop(value.user_name, 100);
           // TODO TTS value.message.text after duration of video passes
         });
 
         cheer.on('change', value => {
           nodecg.log.debug('updated cheer:', value);
-          draw('#display-cheer', `${value.name} (${value.amount})`, 10, 4, 5, 100);
+          panelCheer.drawLoop(`${value.name} (${value.amount})`, 100);
           // TODO TTS value.message after duration of video passes
         });
 
@@ -40,14 +46,14 @@
 
         track.on('change', value => {
           nodecg.log.debug('updated track:', value);
-          draw('#display-track', value, 10, 4, 5, 100);
+          panelTrack.drawLoop(value, 100);
         });
 
         counters.on('change', value => {
           const visible = value.filter(counter => counter.show);
           for (let i = 0; i < 4; ++i) {
             const label = visible[i] ? `!${visible[i].command.padEnd(7)} ${visible[i].count.toString().padStart(4)}` : '';
-            draw(`#counter${i+1}`, label, 13, 5, 5);
+            panelCounters[i].drawLoop(label);
           }
         });
       });
