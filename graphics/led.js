@@ -308,10 +308,11 @@ class LEDPanel {
     }
 
     drawLoopable(text, interval) {
+        clearInterval(this.timer);
         this.buildTextMatrix(text);
         if (text.length > this.length) {
             let offset = 0;
-            setInterval(() => this.drawStep(offset++, text.length+1), interval);
+            this.timer = setInterval(() => this.drawStep(offset++, text.length+1), interval);
         } else {
             this.drawStep(this.centerOffset(text), this.length);
         }
