@@ -12,16 +12,17 @@
       const follower = nodecg.Replicant('follower');
       const subscriber = nodecg.Replicant('subscriber');
       const cheer = nodecg.Replicant('cheer');
-      const raid = nodecg.Replicant('raid');
       const track = nodecg.Replicant('track');
       const counters = nodecg.Replicant('counters');
+      const alerts = nodecg.Replicant('alerts');
 
       document.addEventListener('DOMContentLoaded', async () => {
         const panelFollower = new LEDPanel('#display-follower', 10, 4, 5);
         const panelSubscriber = new LEDPanel('#display-subscriber', 10, 4, 5);
         const panelCheer = new LEDPanel('#display-cheer', 10, 4, 5);
         const panelTrack = new LEDPanel('#display-track', 10, 4, 5);
-        const panelCounters = _.range(4).map(i => new LEDPanel(`#counter${i+1}`, 13, 5, 5));
+        const panelAlerts = new LEDPanel('#alerts', 25, 4, 5);
+        const panelCounters = _.range(3).map(i => new LEDPanel(`#counter${i+1}`, 13, 5, 5));
 
         follower.on('change', value => {
           nodecg.log.debug('updated follower:', value);
@@ -36,12 +37,8 @@
 
         cheer.on('change', value => {
           nodecg.log.debug('updated cheer:', value);
-          panelCheer.drawLoopable(`${value.name} (${value.amount})`, 100);
+          panelCheer.drawLoopable(`${value.user_name} (${value.bits})`, 100);
           // TODO TTS value.message after duration of video passes
-        });
-
-        raid.on('change', value => {
-          nodecg.log.debug('updated raid:', value);
         });
 
         track.on('change', value => {
@@ -49,9 +46,14 @@
           panelTrack.drawLoopable(value, 100);
         });
 
+        alerts.on('change', async value => {
+          await panelAlerts.drawScroll(value.message, 25);
+          await panelAlerts.drawAndClearVertical(value.user_name, 250);
+        });
+
         counters.on('change', value => {
           const visible = value.filter(counter => counter.show);
-          for (let i = 0; i < 4; ++i) {
+          for (let i = 0; i < 3; ++i) {
             const label = visible[i] ? `!${visible[i].command.padEnd(7)} ${visible[i].count.toString().padStart(4)}` : '';
             panelCounters[i].drawLoopable(label);
           }
@@ -61,10 +63,10 @@
   </head>
 
   <body>
+    <svg id="alerts"></svg>
     <svg id="counter1"></svg>
     <svg id="counter2"></svg>
     <svg id="counter3"></svg>
-    <svg id="counter4"></svg>
     <h3 id="label-follower">Último embarque</h3>
     <svg id="display-follower"></svg>
     <h3 id="label-subscriber">Último passe</h3>

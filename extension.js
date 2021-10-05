@@ -20,8 +20,8 @@ module.exports = nodecg => {
 	const follower = nodecg.Replicant('follower');
 	const subscriber = nodecg.Replicant('subscriber');
 	const cheer = nodecg.Replicant('cheer');
-	const raid = nodecg.Replicant('raid');
 	const track = nodecg.Replicant('track');
+	const alerts = nodecg.Replicant('alerts');
 
 	axios.get(`https://api.twitch.tv/helix/users/follows?to_id=${config.channelId}`, {
 		headers: {
@@ -36,18 +36,6 @@ module.exports = nodecg => {
 		nodecg.log.error('Error on calling Twitch Helix API:', err.response.data);
 		process.exit(1);
 	});
-	axios.get(`https://api.streamelements.com/kappa/v2/activities/${config.streamElements.channelId}?types=cheer`, {
-		headers: {
-			Authorization: `Bearer ${config.streamElements.jwtToken}`
-		}
-	}).then(response => {
-		nodecg.log.debug('Initializing cheer via StreamElements API');
-		const data = response.data[0].data;
-		cheer.value = {
-			name: displayUser(data.displayName, data.username),
-			amount: data.amount
-		};
-	});
 
 	const obs = new OBSWebSocket();
 	obs.connect(config.obs)
@@ -56,13 +44,13 @@ module.exports = nodecg => {
 			process.exit(1);
 		});
 
-	ngrok.connect({ addr: config.ngrok.port, authtoken: config.ngrok.authToken }).then(url => {
+	ngrok.connect({ addr: config.eventSub.port, authtoken: config.ngrok.authToken }).then(url => {
 		nodecg.log.info('ngrok connected:', url);
 		const eventSub = new TES({
 			identity: config.twitchApp,
 			listener: {
 				baseURL: url,
-				port: config.ngrok.port,
+				port: config.eventSub.port,
 				secret: config.eventSub.secret
 			}
 		});
@@ -76,26 +64,21 @@ module.exports = nodecg => {
 		eventSub.on('channel.follow', event => {
 			nodecg.log.debug('received channel.follow:', event);
 			follower.value = displayUser(event.user_name, event.user_login);
+			alerts.value = { user_name: follower.value, message: 'Novo passageiro no Comboio' };
 			obs.send('RestartMedia', {sourceName: 'Wololo'});
-		});
-		eventSub.on('channel.subscribe', event => {
-			nodecg.log.debug('received channel.subscribe:', event);
-			event.user_name = displayUser(event.user_name, event.user_login);
-			subscriber.value = event;
-			obs.send('RestartMedia', {sourceName: 'Heavy Metal'});
 		});
 		eventSub.on('channel.subscription.message', event => {
 			nodecg.log.debug('received channel.subscription.message:', event);
 			event.user_name = displayUser(event.user_name, event.user_login);
+			alerts.value = { user_name: event.user_name, message: `Novo passe adquirido, totalizando ${event.cumulative_months} meses` };
 			subscriber.value = event;
 			obs.send('RestartMedia', {sourceName: 'Heavy Metal'});
 		});
 		eventSub.on('channel.cheer', event => {
 			nodecg.log.debug('received channel.cheer:', event);
-			cheer.value = {
-				name: displayUser(event.user_name, event.user_login, event.is_anonymous),
-				amount: event.bits
-			};
+			event.user_name = displayUser(event.user_name, event.user_login, event.is_anonymous);
+			alerts.value = { user_name: event.user_name, message: `${event.bits} bits enviados para o Comboio` };
+			cheer.value = event;
 			obs.send('RestartMedia', {sourceName: 'OH O GÁS'});
 		});
 		eventSub.on('channel.channel_points_custom_reward_redemption.add', event => {
@@ -108,6 +91,7 @@ module.exports = nodecg => {
 		eventSub.on('channel.raid', event => {
 			nodecg.log.debug('received channel.raid:', event);
 			event.from_broadcaster_user_name = displayUser(event.from_broadcaster_user_name, event.from_broadcaster_user_login);
+			alerts.value = { user_name: event.from_broadcaster_user_name, message: `Recebendo uma raid com ${event.viewers} pessoas` };
 			raid.value = event;
 			obs.send('RestartMedia', {sourceName: 'AAAAAAAA'});
 		});

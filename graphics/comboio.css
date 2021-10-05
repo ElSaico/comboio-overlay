@@ -23,60 +23,60 @@ svg {
 
 #label-follower {
     left: 20px;
-    top: 900px;
+    top: 920px;
 }
 
 #label-subscriber {
     left: 360px;
-    top: 900px;
+    top: 920px;
 }
 
 #label-cheer {
     left: 700px;
-    top: 900px;
+    top: 920px;
 }
 
 #label-track {
     left: 1040px;
-    top: 900px;
+    top: 920px;
+}
+
+#alerts {
+    left: 365px;
+    top: 20px;
 }
 
 #display-follower {
     left: 20px;
-    top: 1000px;
+    top: 1020px;
 }
 
 #display-subscriber {
     left: 360px;
-    top: 1000px;
+    top: 1020px;
 }
 
 #display-cheer {
     left: 700px;
-    top: 1000px;
+    top: 1020px;
 }
 
 #display-track {
     left: 1040px;
-    top: 1000px;
+    top: 1020px;
 }
 
 #counter1 {
     left: 1380px;
-    top: 900px;
+    top: 940px;
 }
 
 #counter2 {
     left: 1380px;
-    top: 940px;
-}
-
-#counter3 {
-    left: 1380px;
     top: 980px;
 }
 
-#counter4 {
+#counter3 {
     left: 1380px;
     top: 1020px;
 }
