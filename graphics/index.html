@@ -8,13 +8,11 @@
     <script type='text/javascript' src="../node_modules/@svgdotjs/svg.js/dist/svg.min.js"></script>
     <script type='text/javascript' src="led.js"></script>
     <script type="text/javascript">
-      const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'EUR' });
       const follower = nodecg.Replicant('follower');
       const subscriber = nodecg.Replicant('subscriber');
       const cheer = nodecg.Replicant('cheer');
       const track = nodecg.Replicant('track');
       const counters = nodecg.Replicant('counters');
-      const alerts = nodecg.Replicant('alerts');
 
       document.addEventListener('DOMContentLoaded', async () => {
         const panelFollower = new LEDPanel('#display-follower', 10, 4, 5);
@@ -46,7 +44,7 @@
           panelTrack.drawLoopable(value, 100);
         });
 
-        alerts.on('change', async value => {
+        nodecg.listenFor('alert', async value => {
           await panelAlerts.drawScroll(value.message, 25);
           await panelAlerts.drawAndClearVertical(value.user_name, 250);
         });

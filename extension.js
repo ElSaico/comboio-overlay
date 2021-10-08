@@ -6,7 +6,6 @@ const ngrok = require('ngrok');
 const TES = require('tesjs');
 const tmi = require('tmi.js');
 const discordjs = require('discord.js');
-const googleTTS = require('@google-cloud/text-to-speech');
 
 const autoShDelay = 5000;
 
@@ -21,7 +20,6 @@ module.exports = nodecg => {
 	const subscriber = nodecg.Replicant('subscriber');
 	const cheer = nodecg.Replicant('cheer');
 	const track = nodecg.Replicant('track');
-	const alerts = nodecg.Replicant('alerts');
 
 	axios.get(`https://api.twitch.tv/helix/users/follows?to_id=${config.channelId}`, {
 		headers: {
@@ -64,20 +62,29 @@ module.exports = nodecg => {
 		eventSub.on('channel.follow', event => {
 			nodecg.log.debug('received channel.follow:', event);
 			follower.value = displayUser(event.user_name, event.user_login);
-			alerts.value = { user_name: follower.value, message: 'Novo passageiro no Comboio' };
+			nodecg.sendMessage('alert', {
+				user_name: follower.value,
+				message: 'Novo passageiro no Comboio'
+			});
 			obs.send('RestartMedia', {sourceName: 'Wololo'});
 		});
 		eventSub.on('channel.subscription.message', event => {
 			nodecg.log.debug('received channel.subscription.message:', event);
 			event.user_name = displayUser(event.user_name, event.user_login);
-			alerts.value = { user_name: event.user_name, message: `Novo passe adquirido, totalizando ${event.cumulative_months} meses` };
+			nodecg.sendMessage('alert', {
+				user_name: event.user_name,
+				message: `Novo passe adquirido, totalizando ${event.cumulative_months} meses`
+			});
 			subscriber.value = event;
 			obs.send('RestartMedia', {sourceName: 'Heavy Metal'});
 		});
 		eventSub.on('channel.cheer', event => {
 			nodecg.log.debug('received channel.cheer:', event);
 			event.user_name = displayUser(event.user_name, event.user_login, event.is_anonymous);
-			alerts.value = { user_name: event.user_name, message: `${event.bits} bits enviados para o Comboio` };
+			nodecg.sendMessage('alert', {
+				user_name: event.user_name,
+				message: `${event.bits} bits enviados para o Comboio`
+			});
 			cheer.value = event;
 			obs.send('RestartMedia', {sourceName: 'OH O GÁS'});
 		});
@@ -91,7 +98,10 @@ module.exports = nodecg => {
 		eventSub.on('channel.raid', event => {
 			nodecg.log.debug('received channel.raid:', event);
 			event.from_broadcaster_user_name = displayUser(event.from_broadcaster_user_name, event.from_broadcaster_user_login);
-			alerts.value = { user_name: event.from_broadcaster_user_name, message: `Recebendo uma raid com ${event.viewers} pessoas` };
+			nodecg.sendMessage('alert', {
+				user_name: event.from_broadcaster_user_name,
+				message: `Recebendo uma raid com ${event.viewers} pessoas`
+			});
 			raid.value = event;
 			obs.send('RestartMedia', {sourceName: 'AAAAAAAA'});
 		});
