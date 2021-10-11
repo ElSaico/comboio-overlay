@@ -102,7 +102,6 @@ module.exports = nodecg => {
 				user_name: event.from_broadcaster_user_name,
 				message: `Recebendo uma raid com ${event.viewers} pessoas`
 			});
-			raid.value = event;
 			obs.send('RestartMedia', {sourceName: 'AAAAAAAA'});
 		});
 		eventSub.subscribe('channel.follow', subParams);
