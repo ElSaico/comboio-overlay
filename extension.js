@@ -66,7 +66,6 @@ module.exports = nodecg => {
 				user_name: follower.value,
 				message: 'Novo passageiro no Comboio'
 			});
-			obs.send('RestartMedia', {sourceName: 'Wololo'});
 		});
 		eventSub.on('channel.subscription.message', event => {
 			nodecg.log.debug('received channel.subscription.message:', event);
@@ -76,7 +75,6 @@ module.exports = nodecg => {
 				message: `Novo passe adquirido, totalizando ${event.cumulative_months} meses`
 			});
 			subscriber.value = event;
-			obs.send('RestartMedia', {sourceName: 'Heavy Metal'});
 		});
 		eventSub.on('channel.cheer', event => {
 			nodecg.log.debug('received channel.cheer:', event);
@@ -86,7 +84,6 @@ module.exports = nodecg => {
 				message: `${event.bits} bits enviados para o Comboio`
 			});
 			cheer.value = event;
-			obs.send('RestartMedia', {sourceName: 'OH O GÁS'});
 		});
 		eventSub.on('channel.channel_points_custom_reward_redemption.add', event => {
 			nodecg.log.debug('received channel.channel_points_custom_reward_redemption.add:', event);
@@ -107,7 +104,6 @@ module.exports = nodecg => {
 				user_name: event.from_broadcaster_user_name,
 				message: `Recebendo uma raid com ${event.viewers} pessoas`
 			});
-			obs.send('RestartMedia', {sourceName: 'AAAAAAAA'});
 		});
 		eventSub.subscribe('channel.follow', subParams);
 		eventSub.subscribe('channel.subscribe', subParams);
