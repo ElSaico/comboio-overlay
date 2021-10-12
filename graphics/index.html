@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="comboio.css"/>
     <script type='text/javascript' src="../node_modules/lodash/lodash.min.js"></script>
     <script type='text/javascript' src="../node_modules/@svgdotjs/svg.js/dist/svg.min.js"></script>
+    <script type="text/javascript" src="../node_modules/microsoft-cognitiveservices-speech-sdk/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle-min.js"></script>
     <script type='text/javascript' src="led.js"></script>
     <script type="text/javascript">
       const follower = nodecg.Replicant('follower');
@@ -13,6 +14,9 @@
       const cheer = nodecg.Replicant('cheer');
       const track = nodecg.Replicant('track');
       const counters = nodecg.Replicant('counters');
+
+      const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(nodecg.bundleConfig.tts.speechKey, nodecg.bundleConfig.tts.region);
+      speechConfig.speechSynthesisVoiceName = nodecg.bundleConfig.tts.voiceName;
 
       document.addEventListener('DOMContentLoaded', async () => {
         const panelFollower = new LEDPanel('#display-follower', 10, 4, 5);
@@ -30,13 +34,11 @@
         subscriber.on('change', value => {
           nodecg.log.debug('updated subscriber:', value);
           panelSubscriber.drawLoopable(value.user_name, 100);
-          // TODO TTS value.message.text after duration of video passes
         });
 
         cheer.on('change', value => {
           nodecg.log.debug('updated cheer:', value);
           panelCheer.drawLoopable(`${value.user_name} (${value.bits})`, 100);
-          // TODO TTS value.message after duration of video passes
         });
 
         track.on('change', value => {
@@ -45,8 +47,21 @@
         });
 
         nodecg.listenFor('alert', async value => {
-          await panelAlerts.drawScroll(value.message, 25);
+          const tts = new SpeechSDK.SpeechSynthesizer(speechConfig);
+          setTimeout(() => tts.speakTextAsync(value.message), 500);
+          await panelAlerts.drawScroll(value.message, 10);
+          setTimeout(() => tts.speakTextAsync(value.user_name), 500);
           await panelAlerts.drawAndClearVertical(value.user_name, 250);
+          tts.close();
+        });
+
+        nodecg.listenFor('tts', value => {
+          const tts = new SpeechSDK.SpeechSynthesizer(speechConfig);
+          tts.speakTextAsync(
+            value,
+            result => tts.close(),
+            err => tts.close()
+          );
         });
 
         counters.on('change', value => {
