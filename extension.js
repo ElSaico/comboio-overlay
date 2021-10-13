@@ -64,7 +64,7 @@ module.exports = nodecg => {
 			follower.value = displayUser(event.user_name, event.user_login);
 			nodecg.sendMessage('alert', {
 				user_name: follower.value,
-				message: 'Novo passageiro no Comboio'
+				title: 'Novo passageiro no Comboio'
 			});
 		});
 		eventSub.on('channel.subscription.message', event => {
@@ -72,7 +72,8 @@ module.exports = nodecg => {
 			event.user_name = displayUser(event.user_name, event.user_login);
 			nodecg.sendMessage('alert', {
 				user_name: event.user_name,
-				message: `Novo passe adquirido, totalizando ${event.cumulative_months} meses`
+				title: `Novo passe adquirido, totalizando ${event.cumulative_months} meses`,
+				message: event.message.text
 			});
 			subscriber.value = event;
 		});
@@ -81,7 +82,8 @@ module.exports = nodecg => {
 			event.user_name = displayUser(event.user_name, event.user_login, event.is_anonymous);
 			nodecg.sendMessage('alert', {
 				user_name: event.user_name,
-				message: `${event.bits} bits enviados para o Comboio`
+				title: `${event.bits} bits enviados para o Comboio`,
+				message: event.message
 			});
 			cheer.value = event;
 		});
@@ -102,7 +104,7 @@ module.exports = nodecg => {
 			event.from_broadcaster_user_name = displayUser(event.from_broadcaster_user_name, event.from_broadcaster_user_login);
 			nodecg.sendMessage('alert', {
 				user_name: event.from_broadcaster_user_name,
-				message: `Recebendo uma raid com ${event.viewers} pessoas`
+				title: `Recebendo uma raid com ${event.viewers} pessoas`
 			});
 		});
 		eventSub.subscribe('channel.follow', subParams);
