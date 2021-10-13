@@ -52,25 +52,20 @@
 
         nodecg.listenFor('alert', value => {
           alertQueue.exec(async () => {
-            tee.play();
             const tts = new SpeechSDK.SpeechSynthesizer(speechConfig);
-            setTimeout(() => tts.speakTextAsync(value.title), 9000);
-            await panelAlerts.drawScroll(value.title, 25);
-            setTimeout(() => tts.speakTextAsync(value.user_name), 500);
-            await panelAlerts.drawAndClearVertical(value.user_name, 250);
+            if (value.title) {
+              tee.play();
+              setTimeout(() => tts.speakTextAsync(value.title), 9000);
+              await panelAlerts.drawScroll(value.title, 25);
+            }
+            if (value.user_name) {
+              setTimeout(() => tts.speakTextAsync(value.user_name), 500);
+              await panelAlerts.drawAndClearVertical(value.user_name, 250);
+            }
             if (value.message) {
               setTimeout(() => tts.speakTextAsync(value.message), 250);
               await panelAlerts.drawScroll(value.message, 25);
             }
-            tts.close();
-          });
-        });
-
-        nodecg.listenFor('tts', value => {
-          alertQueue.exec(async () => {
-            const tts = new SpeechSDK.SpeechSynthesizer(speechConfig);
-            setTimeout(() => tts.speakTextAsync(value), 250);
-            await panelAlerts.drawScroll(value, 25);
             tts.close();
           });
         });

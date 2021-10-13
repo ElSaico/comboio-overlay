@@ -91,7 +91,9 @@ module.exports = nodecg => {
 			nodecg.log.debug('received channel.channel_points_custom_reward_redemption.add:', event);
 			if (event.reward.title === config.tts.reward) {
 				nodecg.log.debug('tts', event.user_input);
-				nodecg.sendMessage('tts', event.user_input);
+				nodecg.sendMessage('alert', {
+					message: event.user_input
+				});
 			} else {
 				const sourceName = config.rewardMedia[event.reward.title];
 				if (sourceName) {
