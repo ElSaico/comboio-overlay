@@ -7,6 +7,7 @@
     <script type='text/javascript' src="../node_modules/lodash/lodash.min.js"></script>
     <script type='text/javascript' src="../node_modules/@svgdotjs/svg.js/dist/svg.min.js"></script>
     <script type="text/javascript" src="../node_modules/microsoft-cognitiveservices-speech-sdk/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle-min.js"></script>
+    <script type="text/javascript" src="../node_modules/modern-async/dist/modern-async.umd.js"></script>
     <script type='text/javascript' src="led.js"></script>
     <script type="text/javascript">
       const follower = nodecg.Replicant('follower');
@@ -19,6 +20,7 @@
       speechConfig.speechSynthesisVoiceName = nodecg.bundleConfig.tts.voiceName;
       const tee = new Audio("media/tee.ogg");
       tee.volume = 0.5;
+      const alertQueue = new modernAsync.Queue(1);
 
       document.addEventListener('DOMContentLoaded', async () => {
         const panelFollower = new LEDPanel('#display-follower', 10, 4, 5);
@@ -48,28 +50,29 @@
           panelTrack.drawLoopable(value, 100);
         });
 
-        nodecg.listenFor('alert', async value => {
-          tee.play();
-          const tts = new SpeechSDK.SpeechSynthesizer(speechConfig);
-          setTimeout(() => tts.speakTextAsync(value.title), 9000);
-          await panelAlerts.drawScroll(value.title, 25);
-          setTimeout(() => tts.speakTextAsync(value.user_name), 500);
-          await panelAlerts.drawAndClearVertical(value.user_name, 250);
-          if (value.message) {
-            setTimeout(() => tts.speakTextAsync(value.message), 250);
-            await panelAlerts.drawScroll(value.message, 25);
-          }
-          tts.close();
+        nodecg.listenFor('alert', value => {
+          alertQueue.exec(async () => {
+            tee.play();
+            const tts = new SpeechSDK.SpeechSynthesizer(speechConfig);
+            setTimeout(() => tts.speakTextAsync(value.title), 9000);
+            await panelAlerts.drawScroll(value.title, 25);
+            setTimeout(() => tts.speakTextAsync(value.user_name), 500);
+            await panelAlerts.drawAndClearVertical(value.user_name, 250);
+            if (value.message) {
+              setTimeout(() => tts.speakTextAsync(value.message), 250);
+              await panelAlerts.drawScroll(value.message, 25);
+            }
+            tts.close();
+          });
         });
 
         nodecg.listenFor('tts', value => {
-          panelAlerts.drawScroll(value, 25);
-          const tts = new SpeechSDK.SpeechSynthesizer(speechConfig);
-          tts.speakTextAsync(
-            value,
-            result => tts.close(),
-            err => tts.close()
-          );
+          alertQueue.exec(async () => {
+            const tts = new SpeechSDK.SpeechSynthesizer(speechConfig);
+            setTimeout(() => tts.speakTextAsync(value), 250);
+            await panelAlerts.drawScroll(value, 25);
+            tts.close();
+          });
         });
 
         counters.on('change', value => {
