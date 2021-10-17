@@ -40,7 +40,6 @@
     "lodash": "^4.17.21",
     "microsoft-cognitiveservices-speech-sdk": "1.18.1",
     "modern-async": "1.0.3",
-    "ngrok": "^4.1.0",
     "obs-websocket-js": "^4.0.3",
     "tesjs": "^0.5.1",
     "tmi.js": "^1.8.5"

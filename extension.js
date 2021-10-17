@@ -2,7 +2,6 @@ const process = require('process');
 
 const axios = require('axios');
 const OBSWebSocket = require('obs-websocket-js');
-const ngrok = require('ngrok');
 const TES = require('tesjs');
 const tmi = require('tmi.js');
 const discordjs = require('discord.js');
@@ -42,80 +41,77 @@ module.exports = nodecg => {
 			process.exit(1);
 		});
 
-	ngrok.connect({ addr: config.eventSub.port, authtoken: config.ngrok.authToken }).then(url => {
-		nodecg.log.info('ngrok connected:', url);
-		const eventSub = new TES({
-			identity: config.twitchApp,
-			listener: {
-				baseURL: url,
-				port: config.eventSub.port,
-				secret: config.eventSub.secret
-			}
-		});
-		const subParams = { broadcaster_user_id: config.channelId };
-		eventSub.getSubscriptions().then(result => {
-			result.data.forEach(sub => {
-				eventSub.unsubscribe(sub.id);
-			});
-		});
-		// TODO queue up events
-		eventSub.on('channel.follow', event => {
-			nodecg.log.debug('received channel.follow:', event);
-			follower.value = displayUser(event.user_name, event.user_login);
-			nodecg.sendMessage('alert', {
-				user_name: follower.value,
-				title: 'Novo passageiro no Comboio'
-			});
-		});
-		eventSub.on('channel.subscription.message', event => {
-			nodecg.log.debug('received channel.subscription.message:', event);
-			event.user_name = displayUser(event.user_name, event.user_login);
-			nodecg.sendMessage('alert', {
-				user_name: event.user_name,
-				title: `Novo passe adquirido, totalizando ${event.cumulative_months} meses`,
-				message: event.message.text
-			});
-			subscriber.value = event;
-		});
-		eventSub.on('channel.cheer', event => {
-			nodecg.log.debug('received channel.cheer:', event);
-			event.user_name = displayUser(event.user_name, event.user_login, event.is_anonymous);
-			nodecg.sendMessage('alert', {
-				user_name: event.user_name,
-				title: `${event.bits} bits enviados para o Comboio`,
-				message: event.message
-			});
-			cheer.value = event;
-		});
-		eventSub.on('channel.channel_points_custom_reward_redemption.add', event => {
-			nodecg.log.debug('received channel.channel_points_custom_reward_redemption.add:', event);
-			if (event.reward.title === config.tts.reward) {
-				nodecg.log.debug('tts', event.user_input);
-				nodecg.sendMessage('alert', {
-					message: event.user_input
-				});
-			} else {
-				const sourceName = config.rewardMedia[event.reward.title];
-				if (sourceName) {
-					obs.send('RestartMedia', { sourceName });
-				}
-			}
-		});
-		eventSub.on('channel.raid', event => {
-			nodecg.log.debug('received channel.raid:', event);
-			event.from_broadcaster_user_name = displayUser(event.from_broadcaster_user_name, event.from_broadcaster_user_login);
-			nodecg.sendMessage('alert', {
-				user_name: event.from_broadcaster_user_name,
-				title: `Recebendo uma raid com ${event.viewers} pessoas`
-			});
-		});
-		eventSub.subscribe('channel.follow', subParams);
-		eventSub.subscribe('channel.subscribe', subParams);
-		eventSub.subscribe('channel.subscription.message', subParams);
-		eventSub.subscribe('channel.cheer', subParams);
-		eventSub.subscribe('channel.channel_points_custom_reward_redemption.add', subParams);
-		eventSub.subscribe('channel.raid', { to_broadcaster_user_id: config.channelId });
+	const eventSub = new TES({
+		identity: config.twitchApp,
+		listener: {
+			baseURL: config.eventSub.subdomain,
+			port: config.eventSub.port,
+			secret: config.eventSub.secret
+		}
 	});
+	const subParams = { broadcaster_user_id: config.channelId };
+	eventSub.getSubscriptions().then(result => {
+		result.data.forEach(sub => {
+			eventSub.unsubscribe(sub.id);
+		});
+	});
+	// TODO queue up events
+	eventSub.on('channel.follow', event => {
+		nodecg.log.debug('received channel.follow:', event);
+		follower.value = displayUser(event.user_name, event.user_login);
+		nodecg.sendMessage('alert', {
+			user_name: follower.value,
+			title: 'Novo passageiro no Comboio'
+		});
+	});
+	eventSub.on('channel.subscription.message', event => {
+		nodecg.log.debug('received channel.subscription.message:', event);
+		event.user_name = displayUser(event.user_name, event.user_login);
+		nodecg.sendMessage('alert', {
+			user_name: event.user_name,
+			title: `Novo passe adquirido, totalizando ${event.cumulative_months} meses`,
+			message: event.message.text
+		});
+		subscriber.value = event;
+	});
+	eventSub.on('channel.cheer', event => {
+		nodecg.log.debug('received channel.cheer:', event);
+		event.user_name = displayUser(event.user_name, event.user_login, event.is_anonymous);
+		nodecg.sendMessage('alert', {
+			user_name: event.user_name,
+			title: `${event.bits} bits enviados para o Comboio`,
+			message: event.message
+		});
+		cheer.value = event;
+	});
+	eventSub.on('channel.channel_points_custom_reward_redemption.add', event => {
+		nodecg.log.debug('received channel.channel_points_custom_reward_redemption.add:', event);
+		if (event.reward.title === config.tts.reward) {
+			nodecg.log.debug('tts', event.user_input);
+			nodecg.sendMessage('alert', {
+				message: event.user_input
+			});
+		} else {
+			const sourceName = config.rewardMedia[event.reward.title];
+			if (sourceName) {
+				obs.send('RestartMedia', { sourceName });
+			}
+		}
+	});
+	eventSub.on('channel.raid', event => {
+		nodecg.log.debug('received channel.raid:', event);
+		event.from_broadcaster_user_name = displayUser(event.from_broadcaster_user_name, event.from_broadcaster_user_login);
+		nodecg.sendMessage('alert', {
+			user_name: event.from_broadcaster_user_name,
+			title: `Recebendo uma raid com ${event.viewers} pessoas`
+		});
+	});
+	eventSub.subscribe('channel.follow', subParams);
+	eventSub.subscribe('channel.subscribe', subParams);
+	eventSub.subscribe('channel.subscription.message', subParams);
+	eventSub.subscribe('channel.cheer', subParams);
+	eventSub.subscribe('channel.channel_points_custom_reward_redemption.add', subParams);
+	eventSub.subscribe('channel.raid', { to_broadcaster_user_id: config.channelId });
 
 	const chat = new tmi.Client({
 		connection: {
