@@ -126,12 +126,24 @@ module.exports = nodecg => {
     chat.on('message', (channel, tags, message, self) => {
         if (self || !message.startsWith('!')) return;
         const args = message.slice(1).split(' ');
-        const command = args.shift().toLowerCase();
-        const counter = nodecg.readReplicant('counters').find(counter => counter.command === command);
-        if (counter && counter.show) {
-            counter.count++;
-            if (counter.message) {
-                chat.say(channel, counter.message.replace('####', counter.count));
+        let command = args.shift().toLowerCase();
+        if (config.commands[command]) {
+            if (config.commands[command].alias) {
+                command = config.commands[command].alias;
+            }
+            if (config.commands[command].reply) { // TODO use actual replies as soon as tmi.js supports them
+                chat.say(channel, `@${tags.username} ${config.commands[command].reply}`);
+            }
+            if (config.commands[command].message) {
+                chat.say(channel, config.commands[command].message);
+            }
+        } else {
+            const counter = nodecg.readReplicant('counters').find(counter => counter.command === command);
+            if (counter && counter.show) {
+                counter.count++;
+                if (counter.message) {
+                    chat.say(channel, counter.message.replace('####', counter.count));
+                }
             }
         }
     });
