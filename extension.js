@@ -2,6 +2,7 @@ const process = require('process');
 
 const axios = require('axios');
 const OBSWebSocket = require('obs-websocket-js');
+const express = require('express');
 const TES = require('tesjs');
 const tmi = require('tmi.js');
 const discordjs = require('discord.js');
@@ -18,6 +19,7 @@ module.exports = nodecg => {
     const follower = nodecg.Replicant('follower');
     const subscriber = nodecg.Replicant('subscriber');
     const cheer = nodecg.Replicant('cheer');
+    const donate = nodecg.Replicant('donate');
     const track = nodecg.Replicant('track');
     track.value = null;
 
@@ -49,11 +51,29 @@ module.exports = nodecg => {
         }
     });
 
+    const webhook = express();
+    webhook.use(express.urlencoded());
+    webhook.post('/ko-fi', (req, res) => {
+        const data = JSON.parse(req.body.data);
+        if (!data.is_public) {
+            data.from_name = '???';
+        }
+        data.amount = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: data.currency }).format(data.amount);
+        nodecg.sendMessage('alert', {
+            user_name: data.from_name,
+            title: `Doação de ${data.amount} enviada para o Comboio`,
+            message: data.message
+        });
+        donate.value = data;
+        res.status(200).end();
+    });
+    webhook.listen(config.eventSub.port);
+
     const eventSub = new TES({
         identity: config.twitchApp,
         listener: {
             baseURL: config.eventSub.subdomain,
-            port: config.eventSub.port,
+            server: webhook,
             secret: config.eventSub.secret
         }
     });

@@ -14,6 +14,7 @@
       const follower = nodecg.Replicant('follower');
       const subscriber = nodecg.Replicant('subscriber');
       const cheer = nodecg.Replicant('cheer');
+      const donate = nodecg.Replicant('donate');
       const track = nodecg.Replicant('track');
       const counters = nodecg.Replicant('counters');
 
@@ -27,23 +28,24 @@
         const panelFollower = new LEDPanel('#display-follower', 10, 4, 5);
         const panelSubscriber = new LEDPanel('#display-subscriber', 10, 4, 5);
         const panelCheer = new LEDPanel('#display-cheer', 10, 4, 5);
-        const panelTrack = new LEDPanel('#display-track', 10, 4, 5);
+        const panelDonate = new LEDPanel('#display-donate', 10, 4, 5);
         const panelAlerts = new LEDPanel('#alerts', 25, 4, 5);
         const panelCounters = _.range(3).map(i => new LEDPanel(`#counter${i+1}`, 13, 5, 5));
 
         follower.on('change', value => {
-          nodecg.log.debug('updated follower:', value);
           panelFollower.drawLoopable(value, 100);
         });
 
         subscriber.on('change', value => {
-          nodecg.log.debug('updated subscriber:', value);
           panelSubscriber.drawLoopable(value.user_name, 100);
         });
 
         cheer.on('change', value => {
-          nodecg.log.debug('updated cheer:', value);
           panelCheer.drawLoopable(`${value.user_name} (${value.bits})`, 100);
+        });
+
+        donate.on('change', value => {
+          panelDonate.drawLoopable(`${value.from_name} (${value.amount})`, 100);
         });
 
         track.on('change', value => {
@@ -118,7 +120,7 @@
     <svg id="display-subscriber"></svg>
     <h3 id="label-cheer">Últimos bits</h3>
     <svg id="display-cheer"></svg>
-    <h3 id="label-track"></h3>
-    <svg id="display-track"></svg>
+    <h3 id="label-donate">Última doação</h3>
+    <svg id="display-donate"></svg>
   </body>
 </html>
