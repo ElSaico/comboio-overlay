@@ -127,7 +127,9 @@ module.exports = nodecg => {
         if (self || !message.startsWith('!')) return;
         const args = message.slice(1).split(' ');
         let command = args.shift().toLowerCase();
-        if (config.commands[command]) {
+        if (command === 'comandos') {
+            chat.say(channel, `Comandos disponíveis: ${Object.keys(config.commands).map(command => '!'+command).join(' ')}`);
+        } else if (config.commands[command]) {
             if (config.commands[command].alias) {
                 command = config.commands[command].alias;
             }
