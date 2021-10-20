@@ -38,6 +38,7 @@
     "discord.js": "^13.1.0",
     "jsonform": "^2.2.4",
     "lodash": "^4.17.21",
+    "luxon": "^2.0.2",
     "microsoft-cognitiveservices-speech-sdk": "1.18.1",
     "modern-async": "1.0.3",
     "obs-websocket-js": "^4.0.3",

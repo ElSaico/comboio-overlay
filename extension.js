@@ -40,6 +40,13 @@ module.exports = nodecg => {
 			nodecg.log.error('Error on connecting to OBS:', err);
 			process.exit(1);
 		});
+	obs.on('SwitchScenes', event => {
+		if (event['scene-name'] === config.opening.sceneName) {
+			nodecg.sendMessage('opening', config.opening.duration);
+		} else {
+			nodecg.sendMessage('clear-alert'); // TODO find a way to cancel previous countdowns
+		}
+	});
 
 	const eventSub = new TES({
 		identity: config.twitchApp,
@@ -57,7 +64,6 @@ module.exports = nodecg => {
 	});
 	// TODO queue up events
 	eventSub.on('channel.follow', event => {
-		nodecg.log.debug('received channel.follow:', event);
 		follower.value = displayUser(event.user_name, event.user_login);
 		nodecg.sendMessage('alert', {
 			user_name: follower.value,
@@ -65,7 +71,6 @@ module.exports = nodecg => {
 		});
 	});
 	eventSub.on('channel.subscription.message', event => {
-		nodecg.log.debug('received channel.subscription.message:', event);
 		event.user_name = displayUser(event.user_name, event.user_login);
 		nodecg.sendMessage('alert', {
 			user_name: event.user_name,
@@ -75,7 +80,6 @@ module.exports = nodecg => {
 		subscriber.value = event;
 	});
 	eventSub.on('channel.cheer', event => {
-		nodecg.log.debug('received channel.cheer:', event);
 		event.user_name = displayUser(event.user_name, event.user_login, event.is_anonymous);
 		nodecg.sendMessage('alert', {
 			user_name: event.user_name,
@@ -85,9 +89,7 @@ module.exports = nodecg => {
 		cheer.value = event;
 	});
 	eventSub.on('channel.channel_points_custom_reward_redemption.add', event => {
-		nodecg.log.debug('received channel.channel_points_custom_reward_redemption.add:', event);
 		if (event.reward.title === config.tts.reward) {
-			nodecg.log.debug('tts', event.user_input);
 			nodecg.sendMessage('alert', {
 				message: event.user_input
 			});
@@ -99,7 +101,6 @@ module.exports = nodecg => {
 		}
 	});
 	eventSub.on('channel.raid', event => {
-		nodecg.log.debug('received channel.raid:', event);
 		event.from_broadcaster_user_name = displayUser(event.from_broadcaster_user_name, event.from_broadcaster_user_login);
 		nodecg.sendMessage('alert', {
 			user_name: event.from_broadcaster_user_name,

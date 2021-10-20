@@ -274,6 +274,12 @@ class LEDPanel {
         }
     }
 
+    clearAll() {
+        for (let row = 0; row < 8; ++row) {
+            this.clearRow(row);
+        }
+    }
+
     clearRow(row) {
         this.leds[row].forEach(led => led.fill(LEDPanel.#ledOff));
     }

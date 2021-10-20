@@ -8,6 +8,7 @@
     <script type='text/javascript' src="../node_modules/@svgdotjs/svg.js/dist/svg.min.js"></script>
     <script type="text/javascript" src="../node_modules/microsoft-cognitiveservices-speech-sdk/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle-min.js"></script>
     <script type="text/javascript" src="../node_modules/modern-async/dist/modern-async.umd.js"></script>
+    <script type="text/javascript" src="../node_modules/luxon/build/global/luxon.min.js"></script>
     <script type='text/javascript' src="led.js"></script>
     <script type="text/javascript">
       const follower = nodecg.Replicant('follower');
@@ -68,6 +69,23 @@
             }
             tts.close();
           });
+        });
+
+        async function countdown(duration) {
+          if (duration.valueOf() >= 0) {
+            if (alertQueue.running === 0) {
+              await panelAlerts.drawLoopable(`Próxima partida: ${duration.toFormat('mm:ss')}`, 25);
+            }
+            setTimeout(() => countdown(duration.minus(1000)), 1000);
+          }
+        }
+
+        nodecg.listenFor('opening', seconds => {
+          countdown(luxon.Duration.fromMillis(seconds*1000));
+        });
+
+        nodecg.listenFor('clear-alert', () => {
+          panelAlerts.clearAll();
         });
 
         counters.on('change', value => {
