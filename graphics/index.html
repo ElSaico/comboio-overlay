@@ -47,8 +47,13 @@
         });
 
         track.on('change', value => {
-          nodecg.log.debug('updated track:', value);
-          panelTrack.drawLoopable(value, 100);
+          if (alertQueue.running === 0) {
+            if (value) {
+              panelAlerts.drawLoopable(`Ouvindo: ${value}`, 50);
+            } else {
+              panelAlerts.clearAll();
+            }
+          }
         });
 
         nodecg.listenFor('alert', value => {
@@ -68,6 +73,9 @@
               await panelAlerts.drawScroll(value.message, 25);
             }
             tts.close();
+            if (alertQueue.pending === 0 && track.value) {
+              panelAlerts.drawLoopable(`Ouvindo: ${track.value}`, 50);
+            }
           });
         });
 
@@ -110,7 +118,7 @@
     <svg id="display-subscriber"></svg>
     <h3 id="label-cheer">Últimos bits</h3>
     <svg id="display-cheer"></svg>
-    <h3 id="label-track">Tocando</h3>
+    <h3 id="label-track"></h3>
     <svg id="display-track"></svg>
   </body>
 </html>

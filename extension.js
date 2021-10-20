@@ -19,6 +19,7 @@ module.exports = nodecg => {
     const subscriber = nodecg.Replicant('subscriber');
     const cheer = nodecg.Replicant('cheer');
     const track = nodecg.Replicant('track');
+    track.value = null;
 
     axios.get(`https://api.twitch.tv/helix/users/follows?to_id=${config.channelId}`, {
         headers: {
@@ -153,15 +154,20 @@ module.exports = nodecg => {
     const discord = new discordjs.Client({ intents: [discordjs.Intents.FLAGS.GUILDS, discordjs.Intents.FLAGS.GUILD_MESSAGES] });
     discord.once('ready', () => {
         nodecg.log.info('Discord bot is up and running');
-        track.value = ' '; // TODO set to null and handle properly in LEDPanel instead
+        discord.channels.cache.get(config.discord.channelId).messages.fetch(config.discord.playerMessageId);
     });
-    discord.on('messageCreate', message => {
-        if (message.author.id === config.discord.hydraId && message.embeds.length > 0 && message.embeds[0].title === 'Tocando agora') {
-            const nowPlaying = message.embeds[0].description;
-            track.value = nowPlaying;
-            if (config.discord.autoSh[nowPlaying]) {
-                nodecg.log.info('AutoPimba identified:', config.discord.autoSh[nowPlaying]);
-                setTimeout(() => chat.say(config.chat.channel, `!sh ${config.discord.autoSh[nowPlaying]} #autopimba`), autoShDelay);
+    discord.on('messageUpdate', (oldMessage, newMessage) => {
+        if (newMessage.id === config.discord.playerMessageId) {
+            if (newMessage.embeds[0].title === 'Nenhuma música sendo reproduzida no momento') {
+                track.value = null;
+            } else {
+                const [duration, ...titleRest] = newMessage.embeds[0].title.split(' - ');
+                const nowPlaying = titleRest.join(' - ');
+                track.value = nowPlaying;
+                if (config.discord.autoSh[nowPlaying]) {
+                    nodecg.log.info('AutoPimba identified:', config.discord.autoSh[nowPlaying]);
+                    setTimeout(() => chat.say(config.chat.channel, `!sh ${config.discord.autoSh[nowPlaying]} #autopimba`), autoShDelay);
+                }
             }
         }
     });

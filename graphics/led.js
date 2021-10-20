@@ -275,6 +275,7 @@ class LEDPanel {
     }
 
     clearAll() {
+        clearInterval(this.timer);
         for (let row = 0; row < 8; ++row) {
             this.clearRow(row);
         }
@@ -325,6 +326,7 @@ class LEDPanel {
     }
 
     async drawScroll(text, interval) {
+        clearInterval(this.timer);
         this.buildTextMatrix(text);
         for (let offset = -this.length*8; offset <= text.length*8; ++offset) {
             this.drawStep(offset, text.length+this.length);
@@ -333,6 +335,7 @@ class LEDPanel {
     }
 
     async drawAndClearVertical(text, interval) {
+        clearInterval(this.timer);
         this.buildTextMatrix(text);
         for (let row = 0; row < 8; ++row) {
             this.drawRow(row, this.centerOffset(text), this.length);
