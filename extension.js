@@ -92,13 +92,12 @@ module.exports = nodecg => {
         });
     });
     eventSub.on('channel.subscription.message', event => {
-        event.user_name = displayUser(event.user_name, event.user_login);
+        subscriber.value = displayUser(event.user_name, event.user_login);
         nodecg.sendMessage('alert', {
-            user_name: event.user_name,
+            user_name: subscriber.value,
             title: `Novo passe adquirido, totalizando ${event.cumulative_months} meses`,
             message: event.message.text
         });
-        subscriber.value = event;
     });
     eventSub.on('channel.cheer', event => {
         event.user_name = displayUser(event.user_name, event.user_login, event.is_anonymous);
@@ -129,7 +128,6 @@ module.exports = nodecg => {
         });
     });
     eventSub.subscribe('channel.follow', subParams);
-    eventSub.subscribe('channel.subscribe', subParams);
     eventSub.subscribe('channel.subscription.message', subParams);
     eventSub.subscribe('channel.cheer', subParams);
     eventSub.subscribe('channel.channel_points_custom_reward_redemption.add', subParams);

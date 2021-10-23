@@ -37,7 +37,7 @@
         });
 
         subscriber.on('change', value => {
-          panelSubscriber.drawLoopable(value.user_name, 100);
+          panelSubscriber.drawLoopable(value, 100);
         });
 
         cheer.on('change', value => {
