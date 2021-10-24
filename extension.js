@@ -1,10 +1,12 @@
 const process = require('process');
 
-const axios = require('axios');
+const api = require('@twurple/api');
+const auth = require('@twurple/auth');
+const chat = require('@twurple/chat');
+const eventSub = require('@twurple/eventsub');
+
 const OBSWebSocket = require('obs-websocket-js');
 const express = require('express');
-const TES = require('tesjs');
-const tmi = require('tmi.js');
 const discordjs = require('discord.js');
 
 const autoShDelay = 5000;
@@ -16,6 +18,8 @@ function displayUser(name, login, anonymous) {
 
 module.exports = nodecg => {
     const config = nodecg.bundleConfig;
+    const tokens = nodecg.Replicant('tokens');
+
     const follower = nodecg.Replicant('follower');
     const subscriber = nodecg.Replicant('subscriber');
     const cheer = nodecg.Replicant('cheer');
@@ -23,18 +27,23 @@ module.exports = nodecg => {
     const track = nodecg.Replicant('track');
     track.value = null;
 
-    axios.get(`https://api.twitch.tv/helix/users/follows?to_id=${config.channelId}`, {
-        headers: {
-            Authorization: `Bearer ${config.twitchApp.token}`,
-            'Client-Id': config.twitchApp.id
-        }
+    const userAuthProvider = new auth.RefreshingAuthProvider(
+        {
+            clientId: config.twitchApp.id,
+            clientSecret: config.twitchApp.secret,
+            onRefresh: data => tokens.value = data
+        },
+        tokens.value
+    );
+    const userApiClient = new api.ApiClient({ authProvider: userAuthProvider });
+    userApiClient.users.getFollows({
+        followedUser: config.channel.id,
+        limit: 1
     }).then(response => {
         nodecg.log.debug('Initializing follow via Twitch Helix API');
-        const data = response.data.data[0];
-        follower.value = displayUser(data.from_name, data.from_login);
+        follower.value = displayUser(response.data[0].userDisplayName, response.data[0].userName);
     }).catch(err => {
-        nodecg.log.error('Error on calling Twitch Helix API:', err.response.data);
-        process.exit(1);
+        nodecg.log.error('Error on calling Twitch Helix API:', err.body);
     });
 
     const obs = new OBSWebSocket();
@@ -67,103 +76,89 @@ module.exports = nodecg => {
         donate.value = data;
         res.status(200).end();
     });
-    webhook.listen(config.eventSub.port);
 
-    const eventSub = new TES({
-        identity: config.twitchApp,
-        listener: {
-            baseURL: config.eventSub.subdomain,
-            server: webhook,
-            secret: config.eventSub.secret
-        }
+    const appAuthProvider = new auth.ClientCredentialsAuthProvider(config.twitchApp.id, config.twitchApp.secret);
+    const appApiClient = new api.ApiClient({ authProvider: appAuthProvider });
+    const listener = new eventSub.EventSubMiddleware({
+        apiClient: appApiClient,
+        hostName: config.eventSub.hostname,
+        pathPrefix: '/twitch',
+        secret: config.eventSub.secret
     });
-    const subParams = { broadcaster_user_id: config.channelId };
-    eventSub.getSubscriptions().then(result => {
-        result.data.forEach(sub => {
-            eventSub.unsubscribe(sub.id);
-        });
-    });
-    // TODO queue up events
-    eventSub.on('channel.follow', event => {
-        follower.value = displayUser(event.user_name, event.user_login);
-        nodecg.sendMessage('alert', {
-            user_name: follower.value,
-            title: 'Novo passageiro no Comboio'
-        });
-    });
-    eventSub.on('channel.subscription.message', event => {
-        subscriber.value = displayUser(event.user_name, event.user_login);
-        nodecg.sendMessage('alert', {
-            user_name: subscriber.value,
-            title: `Novo passe adquirido, totalizando ${event.cumulative_months} meses`,
-            message: event.message.text
-        });
-    });
-    eventSub.on('channel.cheer', event => {
-        event.user_name = displayUser(event.user_name, event.user_login, event.is_anonymous);
-        nodecg.sendMessage('alert', {
-            user_name: event.user_name,
-            title: `${event.bits} bits enviados para o Comboio`,
-            message: event.message
-        });
-        cheer.value = event;
-    });
-    eventSub.on('channel.channel_points_custom_reward_redemption.add', event => {
-        if (event.reward.title === config.tts.reward) {
-            nodecg.sendMessage('alert', {
-                message: event.user_input
+
+    listener.apply(webhook).then(() => {
+        webhook.listen(config.eventSub.port, async () => {
+            await listener.markAsReady();
+            listener.subscribeToChannelFollowEvents(config.channel.id, event => {
+                follower.value = displayUser(event.userDisplayName, event.userName);
+                nodecg.sendMessage('alert', {
+                    user_name: follower.value,
+                    title: 'Novo passageiro no Comboio'
+                });
             });
-        } else {
-            const sourceName = config.rewardMedia[event.reward.title];
-            if (sourceName) {
-                obs.send('RestartMedia', { sourceName });
-            }
-        }
-    });
-    eventSub.on('channel.raid', event => {
-        event.from_broadcaster_user_name = displayUser(event.from_broadcaster_user_name, event.from_broadcaster_user_login);
-        nodecg.sendMessage('alert', {
-            user_name: event.from_broadcaster_user_name,
-            title: `Recebendo uma raid com ${event.viewers} pessoas`
+            listener.subscribeToChannelSubscriptionMessageEvents(config.channel.id, event => {
+                subscriber.value = displayUser(event.userDisplayName, event.userName);
+                nodecg.sendMessage('alert', {
+                    user_name: subscriber.value,
+                    title: `Novo passe adquirido, totalizando ${event.cumulativeMonths} meses`,
+                    message: event.messageText
+                });
+            });
+            listener.subscribeToChannelCheerEvents(config.channel.id, event => {
+                event.userName = displayUser(event.userDisplayName, event.userName, event.isAnonymous);
+                nodecg.sendMessage('alert', {
+                    user_name: event.userName,
+                    title: `${event.bits} bits enviados para o Comboio`,
+                    message: event.message
+                });
+                cheer.value = event;
+            });
+            listener.subscribeToChannelRedemptionAddEvents(config.channel.id, event => {
+                if (event.rewardTitle === config.tts.reward) {
+                    nodecg.sendMessage('alert', { message: event.input });
+                } else {
+                    const sourceName = config.rewardMedia[event.rewardTitle];
+                    if (sourceName) {
+                        obs.send('RestartMedia', { sourceName });
+                    }
+                }
+            });
+            listener.subscribeToChannelRaidEventsTo(config.channel.id, event => {
+                nodecg.sendMessage('alert', {
+                    user_name: displayUser(event.raidingBroadcasterDisplayName, event.raidingBroadcasterName),
+                    title: `Recebendo uma raid com ${event.viewers} pessoas`
+                });
+            });
         });
     });
-    eventSub.subscribe('channel.follow', subParams);
-    eventSub.subscribe('channel.subscription.message', subParams);
-    eventSub.subscribe('channel.cheer', subParams);
-    eventSub.subscribe('channel.channel_points_custom_reward_redemption.add', subParams);
-    eventSub.subscribe('channel.raid', { to_broadcaster_user_id: config.channelId });
 
-    const chat = new tmi.Client({
-        connection: {
-            reconnect: true,
-            secure: true
-        },
-        identity: config.chat,
-        channels: [ config.chat.channel ]
+    const chatClient = new chat.ChatClient({
+        authProvider: userAuthProvider,
+        channels: [ config.channel.name ]
     });
-    chat.connect();
-    chat.on('message', (channel, tags, message, self) => {
-        if (self || !message.startsWith('!')) return;
+    chatClient.connect();
+    chatClient.onMessage((channel, user, message, privmsg) => {
+        if (!message.startsWith('!')) return;
         const args = message.slice(1).split(' ');
         let command = args.shift().toLowerCase();
         if (command === 'comandos') {
-            chat.say(channel, `Comandos disponíveis: ${Object.keys(config.commands).map(command => '!'+command).join(' ')}`);
+            chatClient.say(channel, `Comandos disponíveis: ${Object.keys(config.commands).map(command => '!'+command).join(' ')}`);
         } else if (config.commands[command]) {
             if (config.commands[command].alias) {
                 command = config.commands[command].alias;
             }
-            if (config.commands[command].reply) { // TODO use actual replies as soon as tmi.js supports them
-                chat.say(channel, `@${tags.username} ${config.commands[command].reply}`);
+            if (config.commands[command].reply) {
+                chatClient.say(channel, config.commands[command].reply, { replyTo: privmsg });
             }
             if (config.commands[command].message) {
-                chat.say(channel, config.commands[command].message);
+                chatClient.say(channel, config.commands[command].message);
             }
         } else {
             const counter = nodecg.readReplicant('counters').find(counter => counter.command === command);
             if (counter && counter.show) {
                 counter.count++;
                 if (counter.message) {
-                    chat.say(channel, counter.message.replace('####', counter.count));
+                    chatClient.say(channel, counter.message.replace('####', counter.count));
                 }
             }
         }

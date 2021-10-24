@@ -34,7 +34,9 @@
   "license": "MPL-2.0",
   "dependencies": {
     "@svgdotjs/svg.js": "^3.1.1",
-    "axios": "^0.21.1",
+    "@twurple/auth": "^5.0.5",
+    "@twurple/chat": "^5.0.5",
+    "@twurple/eventsub": "^5.0.5",
     "discord.js": "^13.1.0",
     "express": "^4.17.1",
     "jsonform": "^2.2.4",
@@ -42,9 +44,7 @@
     "luxon": "^2.0.2",
     "microsoft-cognitiveservices-speech-sdk": "1.18.1",
     "modern-async": "1.0.3",
-    "obs-websocket-js": "^4.0.3",
-    "tesjs": "^0.5.1",
-    "tmi.js": "^1.8.5"
+    "obs-websocket-js": "^4.0.3"
   },
   "scripts": {
     "sim-event": "node sim-event.js"

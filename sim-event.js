@@ -8,8 +8,9 @@ if (process.argv.length < 3) {
 
 const cli = spawn('twitch', [
     'event', 'trigger', process.argv[2],
-    '-F', `http://localhost:${cfg.eventSub.port}/teswh/event`,
-    '-t', cfg.channelId,
+    // FIXME twurple verification fails because reasons; also needs to map event URLs more accurately
+    '-F', `https://${cfg.eventSub.hostname}/twitch/event/channel.${process.argv[2]}.${cfg.channel.id}`,
+    '-t', cfg.channel.id,
     '-s', cfg.eventSub.secret,
     ...process.argv.slice(3)
 ]);
