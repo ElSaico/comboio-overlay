@@ -109,10 +109,17 @@ module.exports = nodecg => {
         });
     });
 
-    const chatClient = new chat.ChatClient({
-        authProvider: userAuthProvider,
+    const chatSettings = {
         channels: [ config.channel.name ]
-    });
+    };
+    if (process.env.MOCK_CHAT) {
+        chatSettings.hostName = 'irc.fdgt.dev';
+        chatSettings.webSocket = false;
+        chatSettings.ssl = false; // we could add the Let's Encrypt intermediate cert to Node instead, but ehhhhh
+    } else {
+        chatSettings.authProvider = userAuthProvider;
+    }
+    const chatClient = new chat.ChatClient(chatSettings);
     chatClient.connect();
     chatClient.onMessage((channel, user, message, privmsg) => {
         if (privmsg.isCheer) {
@@ -122,7 +129,7 @@ module.exports = nodecg => {
                 title: `${privmsg.bits} bits enviados para o Comboio`,
                 message: message
             });
-            cheer.value = `${username} (${event.bits})`;
+            cheer.value = `${username} (${privmsg.bits})`;
         } else if (message.startsWith('!')) {
             const args = message.slice(1).split(' ');
             let command = args.shift().toLowerCase();
@@ -162,6 +169,9 @@ module.exports = nodecg => {
             user_name: displayUser(info.displayName, user),
             title: `Recebendo uma raid com ${info.viewerCount} pessoas`
         });
+    });
+    nodecg.listenFor('chat', message => {
+        chatClient.say(config.channel.name, message);
     });
 
     const discord = new discordjs.Client({ intents: [discordjs.Intents.FLAGS.GUILDS, discordjs.Intents.FLAGS.GUILD_MESSAGES] });
