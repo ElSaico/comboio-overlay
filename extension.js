@@ -96,23 +96,6 @@ module.exports = nodecg => {
                     title: 'Novo passageiro no Comboio'
                 });
             });
-            listener.subscribeToChannelSubscriptionMessageEvents(config.channel.id, event => {
-                subscriber.value = displayUser(event.userDisplayName, event.userName);
-                nodecg.sendMessage('alert', {
-                    user_name: subscriber.value,
-                    title: `Novo passe adquirido, totalizando ${event.cumulativeMonths} meses`,
-                    message: event.messageText
-                });
-            });
-            listener.subscribeToChannelCheerEvents(config.channel.id, event => {
-                const username = displayUser(event.userDisplayName, event.userName, event.isAnonymous);
-                nodecg.sendMessage('alert', {
-                    user_name: username,
-                    title: `${event.bits} bits enviados para o Comboio`,
-                    message: event.message
-                });
-                cheer.value = `${username} (${event.bits})`;
-            });
             listener.subscribeToChannelRedemptionAddEvents(config.channel.id, event => {
                 if (event.rewardTitle === config.tts.reward) {
                     nodecg.sendMessage('alert', { message: event.input });
@@ -123,12 +106,6 @@ module.exports = nodecg => {
                     }
                 }
             });
-            listener.subscribeToChannelRaidEventsTo(config.channel.id, event => {
-                nodecg.sendMessage('alert', {
-                    user_name: displayUser(event.raidingBroadcasterDisplayName, event.raidingBroadcasterName),
-                    title: `Recebendo uma raid com ${event.viewers} pessoas`
-                });
-            });
         });
     });
 
@@ -138,30 +115,53 @@ module.exports = nodecg => {
     });
     chatClient.connect();
     chatClient.onMessage((channel, user, message, privmsg) => {
-        if (!message.startsWith('!')) return;
-        const args = message.slice(1).split(' ');
-        let command = args.shift().toLowerCase();
-        if (command === 'comandos') {
-            chatClient.say(channel, `Comandos disponíveis: ${Object.keys(config.commands).map(command => '!'+command).join(' ')}`);
-        } else if (config.commands[command]) {
-            if (config.commands[command].alias) {
-                command = config.commands[command].alias;
-            }
-            if (config.commands[command].reply) {
-                chatClient.say(channel, config.commands[command].reply, { replyTo: privmsg });
-            }
-            if (config.commands[command].message) {
-                chatClient.say(channel, config.commands[command].message);
-            }
-        } else {
-            const counter = nodecg.readReplicant('counters').find(counter => counter.command === command);
-            if (counter && counter.show) {
-                counter.count++;
-                if (counter.message) {
-                    chatClient.say(channel, counter.message.replace('####', counter.count));
+        if (privmsg.isCheer) {
+            const username = displayUser(privmsg.userInfo.displayName, user);
+            nodecg.sendMessage('alert', {
+                user_name: username,
+                title: `${privmsg.bits} bits enviados para o Comboio`,
+                message: message
+            });
+            cheer.value = `${username} (${event.bits})`;
+        } else if (message.startsWith('!')) {
+            const args = message.slice(1).split(' ');
+            let command = args.shift().toLowerCase();
+            if (command === 'comandos') {
+                chatClient.say(channel, `Comandos disponíveis: ${Object.keys(config.commands).map(command => '!'+command).join(' ')}`);
+            } else if (config.commands[command]) {
+                if (config.commands[command].alias) {
+                    command = config.commands[command].alias;
+                }
+                if (config.commands[command].reply) {
+                    chatClient.say(channel, config.commands[command].reply, { replyTo: privmsg });
+                }
+                if (config.commands[command].message) {
+                    chatClient.say(channel, config.commands[command].message);
+                }
+            } else {
+                const counter = nodecg.readReplicant('counters').find(counter => counter.command === command);
+                if (counter && counter.show) {
+                    counter.count++;
+                    if (counter.message) {
+                        chatClient.say(channel, counter.message.replace('####', counter.count));
+                    }
                 }
             }
         }
+    });
+    chatClient.onSub((channel, user, info, notice) => {
+        subscriber.value = displayUser(info.displayName, user);
+        nodecg.sendMessage('alert', {
+            user_name: subscriber.value,
+            title: `Novo passe adquirido, totalizando ${info.months} meses`,
+            message: info.message
+        });
+    });
+    chatClient.onRaid((channel, user, info, notice) => {
+        nodecg.sendMessage('alert', {
+            user_name: displayUser(info.displayName, user),
+            title: `Recebendo uma raid com ${info.viewerCount} pessoas`
+        });
     });
 
     const discord = new discordjs.Client({ intents: [discordjs.Intents.FLAGS.GUILDS, discordjs.Intents.FLAGS.GUILD_MESSAGES] });
