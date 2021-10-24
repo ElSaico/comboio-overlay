@@ -41,11 +41,11 @@
         });
 
         cheer.on('change', value => {
-          panelCheer.drawLoopable(`${value.user_name} (${value.bits})`, 100);
+          panelCheer.drawLoopable(value, 100);
         });
 
         donate.on('change', value => {
-          panelDonate.drawLoopable(`${value.from_name} (${value.amount})`, 100);
+          panelDonate.drawLoopable(value, 100);
         });
 
         track.on('change', value => {

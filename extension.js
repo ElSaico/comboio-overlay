@@ -73,7 +73,7 @@ module.exports = nodecg => {
             title: `Doação de ${data.amount} enviada para o Comboio`,
             message: data.message
         });
-        donate.value = data;
+        donate.value = `${data.from_name} (${data.amount})`;
         res.status(200).end();
     });
 
@@ -105,13 +105,13 @@ module.exports = nodecg => {
                 });
             });
             listener.subscribeToChannelCheerEvents(config.channel.id, event => {
-                event.userName = displayUser(event.userDisplayName, event.userName, event.isAnonymous);
+                const username = displayUser(event.userDisplayName, event.userName, event.isAnonymous);
                 nodecg.sendMessage('alert', {
-                    user_name: event.userName,
+                    user_name: username,
                     title: `${event.bits} bits enviados para o Comboio`,
                     message: event.message
                 });
-                cheer.value = event;
+                cheer.value = `${username} (${event.bits})`;
             });
             listener.subscribeToChannelRedemptionAddEvents(config.channel.id, event => {
                 if (event.rewardTitle === config.tts.reward) {

@@ -2,18 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-	<link rel="stylesheet" href="../node_modules/jsonform/deps/opt/bootstrap.css"></script>
-	<script type="text/javascript" src="../node_modules/jsonform/deps/jquery.min.js"></script>
-	<script type="text/javascript" src="../node_modules/jsonform/deps/opt/jquery-ui.js"></script>
-	<script type="text/javascript" src="../node_modules/jsonform/deps/underscore.js"></script>
-	<script type="text/javascript" src="../node_modules/jsonform/lib/jsonform.js"></script>
+  <link rel="stylesheet" href="../node_modules/jsonform/deps/opt/bootstrap.css"></script>
+  <script type="text/javascript" src="../node_modules/jsonform/deps/jquery.min.js"></script>
+  <script type="text/javascript" src="../node_modules/jsonform/deps/opt/jquery-ui.js"></script>
+  <script type="text/javascript" src="../node_modules/jsonform/deps/underscore.js"></script>
+  <script type="text/javascript" src="../node_modules/jsonform/lib/jsonform.js"></script>
 </head>
 <body>
   <div class="container">
+    <h2>Labels</h2>
+    <form id="follower"></form>
+    <form id="subscriber"></form>
+    <form id="cheer"></form>
+    <form id="donate"></form>
     <h2>Counters</h2>
-	  <form id="counters"></form>
+    <form id="counters"></form>
   </div>
-	<script type="text/javascript">
+  <script type="text/javascript">
+    function createLabelForm(el, label) {
+      const replicant = nodecg.Replicant(label);
+      replicant.on('change', value => {
+        $(el).empty().jsonForm({
+          schema: {
+            [label]: { type: 'string' }
+          },
+          value: { [label]: value },
+          onSubmitValid: values => {
+            replicant.value = values[label];
+          }
+        });
+      });
+    }
+    createLabelForm('#follower', 'follower');
+    createLabelForm('#subscriber', 'subscriber');
+    createLabelForm('#cheer', 'cheer');
+    createLabelForm('#donate', 'donate');
+
     const counters = nodecg.Replicant('counters');
     counters.on('change', value => {
       $('#counters').empty().jsonForm({
@@ -56,6 +80,6 @@
         }
       });
     });
-	</script>
+  </script>
 </body>
 </html>
