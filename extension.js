@@ -62,6 +62,10 @@ module.exports = nodecg => {
 
     const webhook = express();
     webhook.use(express.urlencoded());
+    webhook.use((req, res, next) => {
+        res.set('X-Clacks-Overhead', 'GNU Terry Pratchett');
+        next();
+    });
     webhook.post('/ko-fi', (req, res) => {
         const data = JSON.parse(req.body.data);
         if (!data.is_public) {
