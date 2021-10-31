@@ -193,7 +193,7 @@ module.exports = nodecg => {
                 track.value = nowPlaying;
                 if (config.discord.autoSh[nowPlaying]) {
                     nodecg.log.info('AutoPimba identified:', config.discord.autoSh[nowPlaying]);
-                    setTimeout(() => chat.say(config.chat.channel, `!sh ${config.discord.autoSh[nowPlaying]} #autopimba`), autoShDelay);
+                    setTimeout(() => chatClient.say(config.channel.name, `!sh ${config.discord.autoSh[nowPlaying]} #autopimba`), autoShDelay);
                 }
             }
         }
