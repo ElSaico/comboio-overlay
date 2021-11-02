@@ -5,7 +5,6 @@ const auth = require('@twurple/auth');
 const chat = require('@twurple/chat');
 const eventSub = require('@twurple/eventsub');
 
-const OBSWebSocket = require('obs-websocket-js');
 const express = require('express');
 const discordjs = require('discord.js');
 
@@ -44,20 +43,6 @@ module.exports = nodecg => {
         follower.value = displayUser(response.data[0].userDisplayName, response.data[0].userName);
     }).catch(err => {
         nodecg.log.error('Error on calling Twitch Helix API:', err.body);
-    });
-
-    const obs = new OBSWebSocket();
-    obs.connect(config.obs)
-        .catch(err => {
-            nodecg.log.error('Error on connecting to OBS:', err);
-            process.exit(1);
-        });
-    obs.on('SwitchScenes', event => {
-        if (event['scene-name'] === config.opening.sceneName) {
-            nodecg.sendMessage('opening', config.opening.duration);
-        } else {
-            nodecg.sendMessage('clear-alert'); // TODO find a way to cancel previous countdowns
-        }
     });
 
     const webhook = express();
@@ -106,7 +91,7 @@ module.exports = nodecg => {
                 } else {
                     const sourceName = config.rewardMedia[event.rewardTitle];
                     if (sourceName) {
-                        obs.send('RestartMedia', { sourceName });
+                        nodecg.sendMessage('play', sourceName);
                     }
                 }
             });
