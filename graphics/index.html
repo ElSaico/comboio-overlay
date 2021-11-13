@@ -9,6 +9,8 @@
     <script type="text/javascript" src="../node_modules/microsoft-cognitiveservices-speech-sdk/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle-min.js"></script>
     <script type="text/javascript" src="../node_modules/modern-async/dist/modern-async.umd.js"></script>
     <script type="text/javascript" src="../node_modules/luxon/build/global/luxon.min.js"></script>
+    <script type="text/javascript" src="../node_modules/fetchline/dist/umd/index.js"></script>
+    <script type="text/javascript" src="../node_modules/bdfparser/dist/umd/index.js"></script>
     <script type='text/javascript' src="led.js"></script>
     <script type="text/javascript">
       const follower = nodecg.Replicant('follower');
@@ -25,33 +27,35 @@
       const alertQueue = new modernAsync.Queue(1);
 
       document.addEventListener('DOMContentLoaded', async () => {
-        const panelFollower = new LEDPanel('#display-follower', 10, 4, 5);
-        const panelSubscriber = new LEDPanel('#display-subscriber', 10, 4, 5);
-        const panelCheer = new LEDPanel('#display-cheer', 10, 4, 5);
-        const panelDonate = new LEDPanel('#display-donate', 10, 4, 5);
-        const panelAlerts = new LEDPanel('#alerts', 25, 4, 5);
-        const panelCounters = _.range(3).map(i => new LEDPanel(`#counter${i+1}`, 13, 5, 5));
+        const panelFollower = new LEDPanel('#display-follower', 80, 4, 5);
+        const panelSubscriber = new LEDPanel('#display-subscriber', 80, 4, 5);
+        const panelCheer = new LEDPanel('#display-cheer', 80, 4, 5);
+        const panelDonate = new LEDPanel('#display-donate', 80, 4, 5);
+        const panelAlerts = new LEDPanel('#alerts', 200, 4, 5);
+        const panelCounters = _.range(3).map(i => new LEDPanel(`#counter${i+1}`, 104, 5, 5));
+        const ibmFont = await bdfparser.$Font(fetchline('fonts/ibm8x8.bdf'));
+        const thinFont = await bdfparser.$Font(fetchline('fonts/xterm5x7.bdf'));
 
         follower.on('change', value => {
-          panelFollower.drawLoopable(value, 100);
+          panelFollower.drawLoopable(ibmFont, value, 100);
         });
 
         subscriber.on('change', value => {
-          panelSubscriber.drawLoopable(value, 100);
+          panelSubscriber.drawLoopable(ibmFont, value, 100);
         });
 
         cheer.on('change', value => {
-          panelCheer.drawLoopable(value, 100);
+          panelCheer.drawLoopable(ibmFont, value, 100);
         });
 
         donate.on('change', value => {
-          panelDonate.drawLoopable(value, 100);
+          panelDonate.drawLoopable(ibmFont, value, 100);
         });
 
         track.on('change', value => {
           if (alertQueue.running === 0) {
             if (value) {
-              panelAlerts.drawLoopable(`Ouvindo: ${value}`, 50);
+              panelAlerts.drawLoopable(ibmFont, `Ouvindo: ${value}`, 50);
             } else {
               panelAlerts.clearAll();
             }
@@ -64,19 +68,19 @@
             if (value.title) {
               tee.play();
               setTimeout(() => tts.speakTextAsync(value.title), 9000);
-              await panelAlerts.drawScroll(value.title, 25);
+              await panelAlerts.drawScroll(ibmFont, value.title, 25);
             }
             if (value.user_name) {
               setTimeout(() => tts.speakTextAsync(value.user_name), 500);
-              await panelAlerts.drawAndClearVertical(value.user_name, 250);
+              await panelAlerts.drawAndClearVertical(ibmFont, value.user_name, 250);
             }
             if (value.message) {
               setTimeout(() => tts.speakTextAsync(value.message), 250);
-              await panelAlerts.drawScroll(value.message, 25);
+              await panelAlerts.drawScroll(ibmFont, value.message, 25);
             }
             tts.close();
             if (alertQueue.pending === 0 && track.value) {
-              panelAlerts.drawLoopable(`Ouvindo: ${track.value}`, 50);
+              panelAlerts.drawLoopable(ibmFont, `Ouvindo: ${track.value}`, 50);
             }
           });
         });
@@ -84,7 +88,7 @@
         async function countdown(duration) {
           if (duration.valueOf() >= 0) {
             if (alertQueue.running === 0) {
-              await panelAlerts.drawLoopable(`Próxima partida: ${duration.toFormat('mm:ss')}`, 25);
+              await panelAlerts.drawLoopable(ibmFont, `Próxima partida: ${duration.toFormat('mm:ss')}`, 25);
             }
             setTimeout(() => countdown(duration.minus(1000)), 1000);
           }
@@ -102,7 +106,7 @@
           const visible = value.filter(counter => counter.show);
           for (let i = 0; i < 3; ++i) {
             const label = visible[i] ? `!${visible[i].command.padEnd(7)} ${visible[i].count.toString().padStart(4)}` : '';
-            panelCounters[i].drawLoopable(label);
+            panelCounters[i].drawLoopable(ibmFont, label);
           }
         });
       });
