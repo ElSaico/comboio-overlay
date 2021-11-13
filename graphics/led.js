@@ -1,5 +1,4 @@
 class LEDPanel {
-    static #ledOn = '#ff9900';
     static #ledOff = '#444444';
     static #height = 8;
     leds = [];
@@ -27,64 +26,64 @@ class LEDPanel {
         this.leds[row].forEach(led => led.fill(LEDPanel.#ledOff));
     }
 
-    drawRow(i, data) {
+    drawRow(i, data, color) {
         for (let j = 0; j < data.length; ++j) {
-            this.leds[i][j].fill(data[j] === '1' ? LEDPanel.#ledOn : LEDPanel.#ledOff);
+            this.leds[i][j].fill(data[j] === '1' ? color : LEDPanel.#ledOff);
         }
     }
 
-    drawMatrix(data) {
+    drawMatrix(data, color) {
         for (let i = 0; i < data.length; ++i) {
-            this.drawRow(i, data[i]);
+            this.drawRow(i, data[i], color);
         }
     }
 
-    drawCentered(bitmap) {
+    drawCentered(bitmap, color) {
         const offset = (this.width - bitmap.width()) / 2;
         bitmap.crop(this.width, bitmap.height(), -offset);
-        this.drawMatrix(bitmap.todata());
+        this.drawMatrix(bitmap.todata(), color);
     }
 
-    drawLoop(bitmap, offset) {
+    drawLoop(bitmap, color, offset) {
         offset %= bitmap.width();
         const leftWidth = Math.min(bitmap.width()-offset, this.width);
         const newBitmap = bitmap.clone().crop(leftWidth, bitmap.height(), offset);
         if (newBitmap.width() < this.width) {
             newBitmap.concat(bitmap.clone().crop(this.width-leftWidth, bitmap.height()));
         }
-        this.drawMatrix(newBitmap.todata());
+        this.drawMatrix(newBitmap.todata(), color);
     }
 
-    drawLoopable(font, text, interval) {
+    drawLoopable(font, text, color, interval) {
         clearInterval(this.timer);
         const bitmap = font.draw(text);
         if (text.length * font.headers.fbbx > this.width) {
             let offset = 0;
             bitmap.crop(bitmap.width()+font.headers.fbbx, bitmap.height());
-            this.timer = setInterval(() => this.drawLoop(bitmap, offset++), interval);
+            this.timer = setInterval(() => this.drawLoop(bitmap, color, offset++), interval);
         } else {
-            this.drawCentered(bitmap);
+            this.drawCentered(bitmap, color);
         }
     }
 
-    async drawScroll(font, text, interval) {
+    async drawScroll(font, text, color, interval) {
         clearInterval(this.timer);
         const bitmap = font.draw(text);
         for (let offset = -this.width; offset <= bitmap.width(); ++offset) {
             const newBitmap = bitmap.clone().crop(this.width, bitmap.height(), offset);
-            this.drawMatrix(newBitmap.todata());
+            this.drawMatrix(newBitmap.todata(), color);
             await new Promise(cb => setTimeout(cb, interval));
         }
     }
 
-    async drawAndClearVertical(font, text, interval) {
+    async drawAndClearVertical(font, text, color, interval) {
         clearInterval(this.timer);
         const bitmap = font.draw(text);
         const offset = (this.width - bitmap.width()) / 2;
         bitmap.crop(this.width, bitmap.height(), -offset);
         for (let row = 0; row < LEDPanel.#height; ++row) {
             const rowBitmap = bitmap.clone().crop(bitmap.width(), 1, 0, LEDPanel.#height-row-1);
-            this.drawRow(row, rowBitmap.todata(0));
+            this.drawRow(row, rowBitmap.todata(0), color);
             await new Promise(cb => setTimeout(cb, interval));
         }
         for (let row = 0; row < LEDPanel.#height; ++row) {
