@@ -57,7 +57,7 @@ class LEDPanel {
     drawLoopable(font, text, color, interval) {
         clearInterval(this.timer);
         const bitmap = font.draw(text);
-        if (text.length * font.headers.fbbx > this.width) {
+        if (bitmap.width() > this.width) {
             let offset = 0;
             bitmap.crop(bitmap.width()+font.headers.fbbx, bitmap.height());
             this.timer = setInterval(() => this.drawLoop(bitmap, color, offset++), interval);

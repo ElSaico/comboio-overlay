@@ -34,7 +34,7 @@
         const panelAlerts = new LEDPanel('#alerts', 200, 4, 5);
         const panelCounters = _.range(3).map(i => new LEDPanel(`#counter${i+1}`, 104, 5, 5));
         const ibmFont = await bdfparser.$Font(fetchline('fonts/ibm8x8.bdf'));
-        const thinFont = await bdfparser.$Font(fetchline('fonts/misc5x8.bdf'));
+        const thinFont = await bdfparser.$Font(fetchline('fonts/ticker.bdf'));
 
         follower.on('change', value => {
           panelFollower.drawLoopable(thinFont, value, '#bfff00', 100);
@@ -55,7 +55,7 @@
         track.on('change', value => {
           if (alertQueue.running === 0) {
             if (value) {
-              panelAlerts.drawLoopable(thinFont, value, '#bfff00', 50);
+              panelAlerts.drawLoopable(thinFont, value.normalize('NFD'), '#bfff00', 50);
             } else {
               panelAlerts.clearAll();
             }
@@ -80,7 +80,7 @@
             }
             tts.close();
             if (alertQueue.pending === 0 && track.value) {
-              panelAlerts.drawLoopable(thinFont, track.value, '#bfff00', 50);
+              panelAlerts.drawLoopable(thinFont, track.value.normalize('NFD'), '#bfff00', 50);
             }
           });
         });
