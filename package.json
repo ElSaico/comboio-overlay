@@ -33,7 +33,6 @@
   "repository": "https://github.com/ElSaico/comboio-overlay.git",
   "license": "MPL-2.0",
   "dependencies": {
-    "@svgdotjs/svg.js": "^3.1.1",
     "@twurple/auth": "^5.0.5",
     "@twurple/chat": "^5.0.5",
     "@twurple/eventsub": "^5.0.5",
@@ -42,7 +41,6 @@
     "express": "^4.17.1",
     "fetchline": "^1.0.1",
     "jsonform": "^2.2.4",
-    "lodash": "^4.17.21",
     "luxon": "^2.0.2",
     "microsoft-cognitiveservices-speech-sdk": "1.18.1",
     "modern-async": "1.0.3",

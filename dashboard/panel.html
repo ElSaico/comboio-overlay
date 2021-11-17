@@ -20,7 +20,7 @@
     <form id="follower"></form>
     <form id="subscriber"></form>
     <form id="cheer"></form>
-    <form id="donate"></form>
+    <form id="goal"></form>
     <h2>Counters</h2>
     <form id="counters"></form>
   </div>
@@ -55,7 +55,7 @@
     createLabelForm('#follower', 'follower');
     createLabelForm('#subscriber', 'subscriber');
     createLabelForm('#cheer', 'cheer');
-    createLabelForm('#donate', 'donate');
+    createLabelForm('#goal', 'goal');
 
     const counters = nodecg.Replicant('counters');
     counters.on('change', value => {
