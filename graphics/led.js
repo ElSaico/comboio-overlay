@@ -28,10 +28,14 @@ export default class LEDPanel {
     }
     clearAll() {
         clearInterval(this.timer);
-        this.leds.forEach(this.clearRow);
+        for (let i = 0; i < this.resolution.y; ++i) {
+            this.clearRow(i);
+        }
     }
-    clearRow(row) {
-        row.forEach(led => led.setAttribute('fill', this.offColor));
+    clearRow(i) {
+        for (let j = 0; j < this.resolution.x; ++j) {
+            this.leds[j][i].setAttribute('fill', this.offColor);
+        }
     }
     drawRow(i, row, color) {
         [...row].forEach((col, j) => this.leds[j][i].setAttribute('fill', col === '1' ? color : this.offColor));
@@ -89,10 +93,10 @@ export default class LEDPanel {
                 this.drawRow(i, rowBitmap.todata(0), color);
                 yield new Promise(cb => setTimeout(cb, interval));
             }
-            this.leds.forEach((row) => __awaiter(this, void 0, void 0, function* () {
+            for (let i = 0; i < this.resolution.y; ++i) {
                 yield new Promise(cb => setTimeout(cb, interval));
-                this.clearRow(row);
-            }));
+                this.clearRow(i);
+            }
         });
     }
 }
