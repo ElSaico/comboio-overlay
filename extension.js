@@ -15,6 +15,10 @@ function displayUser(name, login, anonymous) {
     return /[\p{ASCII}]+/u.test(name) ? name : login;
 }
 
+function pluralize(amount, singular, plural) {
+    return amount === 1 ? `${amount} ${singular}` : `${amount} ${plural}`;
+}
+
 module.exports = nodecg => {
     const config = nodecg.bundleConfig;
     const tokens = nodecg.Replicant('tokens');
@@ -102,6 +106,7 @@ module.exports = nodecg => {
         channels: [ config.channel.name ]
     };
     if (process.env.MOCK_CHAT) {
+        nodecg.log.info('Running in mock (fgdt) mode');
         chatSettings.hostName = 'irc.fdgt.dev';
         chatSettings.webSocket = false;
         chatSettings.ssl = false; // we could add the Let's Encrypt intermediate cert to Node instead, but ehhhhh
@@ -115,7 +120,7 @@ module.exports = nodecg => {
             const username = displayUser(privmsg.userInfo.displayName, user);
             nodecg.sendMessage('alert', {
                 user_name: username,
-                title: `${privmsg.bits} bits enviados para o Comboio`,
+                title: `${pluralize(privmsg.bits, 'bit enviado', 'bits enviados')} para o Comboio`,
                 message: message
             });
             cheer.value = `${username} (${privmsg.bits})`;
@@ -149,14 +154,14 @@ module.exports = nodecg => {
         subscriber.value = displayUser(info.displayName, user);
         nodecg.sendMessage('alert', {
             user_name: subscriber.value,
-            title: `Novo passe adquirido, totalizando ${info.months} meses`,
+            title: `Passe adquirido, totalizando ${pluralize(info.months, 'mês', 'meses')}`,
             message: info.message
         });
     });
     chatClient.onRaid((channel, user, info, notice) => {
         nodecg.sendMessage('alert', {
             user_name: displayUser(info.displayName, user),
-            title: `Recebendo uma raid com ${info.viewerCount} pessoas`
+            title: `Recebendo uma raid com ${pluralize(info.viewerCount, 'pessoa', 'pessoas')}`
         });
     });
     nodecg.listenFor('chat', message => {
