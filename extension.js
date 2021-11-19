@@ -115,6 +115,9 @@ module.exports = nodecg => {
     }
     const chatClient = new chat.ChatClient(chatSettings);
     chatClient.connect();
+    if (process.env.MOCK_CHAT) {
+        chatClient.onAnyMessage(msg => nodecg.log.debug(msg));
+    }
     chatClient.onMessage((channel, user, message, privmsg) => {
         if (privmsg.isCheer) {
             const username = displayUser(privmsg.userInfo.displayName, user);
@@ -150,14 +153,16 @@ module.exports = nodecg => {
             }
         }
     });
-    chatClient.onSub((channel, user, info, notice) => {
+    function onSub(channel, user, info, notice) {
         subscriber.value = displayUser(info.displayName, user);
         nodecg.sendMessage('alert', {
             user_name: subscriber.value,
             title: `Passe adquirido, totalizando ${pluralize(info.months, 'mês', 'meses')}`,
             message: info.message
         });
-    });
+    }
+    chatClient.onSub(onSub);
+    chatClient.onResub(onSub);
     chatClient.onRaid((channel, user, info, notice) => {
         nodecg.sendMessage('alert', {
             user_name: displayUser(info.displayName, user),
