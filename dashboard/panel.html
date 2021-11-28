@@ -29,7 +29,7 @@
     obs.connect(nodecg.bundleConfig.obs);
     obs.on('SwitchScenes', event => {
         if (event['scene-name'] === nodecg.bundleConfig.opening.sceneName) {
-            nodecg.sendMessage('opening', nodecg.bundleConfig.opening.duration);
+            nodecg.sendMessage('countdown', ['Próxima partida', nodecg.bundleConfig.opening.duration]);
         } else {
             nodecg.sendMessage('clear-alert'); // TODO find a way to cancel previous countdowns
         }

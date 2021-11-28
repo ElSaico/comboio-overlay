@@ -28,7 +28,6 @@ module.exports = nodecg => {
     const cheer = nodecg.Replicant('cheer');
     const donate = nodecg.Replicant('donate');
     const track = nodecg.Replicant('track');
-    track.value = null;
 
     const userAuthProvider = new auth.RefreshingAuthProvider(
         {
@@ -93,9 +92,12 @@ module.exports = nodecg => {
                 if (event.rewardTitle === config.tts.reward) {
                     nodecg.sendMessage('alert', { message: event.input });
                 } else {
-                    const sourceName = config.rewardMedia[event.rewardTitle];
-                    if (sourceName) {
-                        nodecg.sendMessage('play', sourceName);
+                    const reward = config.rewards[event.rewardTitle];
+                    if (reward.source) {
+                        nodecg.sendMessage('play', reward.source);
+                    }
+                    if (reward.countdown) {
+                        nodecg.sendMessage('countdown', [event.rewardTitle, reward.countdown]);
                     }
                 }
             });
