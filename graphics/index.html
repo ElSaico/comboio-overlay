@@ -85,19 +85,20 @@
           });
         });
 
-        async function countdown(title, duration) {
+        async function countdown(title, duration, filters) {
           if (duration.valueOf() >= 0) {
             if (alertQueue.running === 0) {
               await panelAlerts.drawLoopable(ibmFont, `${title}: ${duration.toFormat('mm:ss')}`, '#ff9900', 25);
             }
-            setTimeout(() => countdown(title, duration.minus(1000)), 1000);
+            setTimeout(() => countdown(title, duration.minus(1000), filters), 1000);
           } else {
             panelAlerts.clearAll();
+            nodecg.sendMessage('countdown-end', filters);
           }
         }
 
-        nodecg.listenFor('countdown', ([title, seconds]) => {
-          countdown(title, Duration.fromMillis(seconds*1000));
+        nodecg.listenFor('countdown', ([title, reward]) => {
+          countdown(title, Duration.fromMillis(reward.countdown*1000), reward.filters);
         });
 
         nodecg.listenFor('clear-alert', () => {

@@ -97,7 +97,7 @@ module.exports = nodecg => {
                         nodecg.sendMessage('play', reward.source);
                     }
                     if (reward.countdown) {
-                        nodecg.sendMessage('countdown', [event.rewardTitle, reward.countdown]);
+                        nodecg.sendMessage('countdown', [event.rewardTitle, reward]);
                     }
                 }
             });

@@ -29,7 +29,7 @@
     obs.connect(nodecg.bundleConfig.obs);
     obs.on('SwitchScenes', event => {
         if (event['scene-name'] === nodecg.bundleConfig.opening.sceneName) {
-            nodecg.sendMessage('countdown', ['Próxima partida', nodecg.bundleConfig.opening.duration]);
+            nodecg.sendMessage('countdown', ['Próxima partida', {countdown: nodecg.bundleConfig.opening.duration}]);
         } else {
             nodecg.sendMessage('clear-alert'); // TODO find a way to cancel previous countdowns
         }
@@ -37,6 +37,24 @@
     nodecg.listenFor('play', sourceName => {
         obs.send('RestartMedia', { sourceName });
     });
+    nodecg.listenFor('countdown', ([title, reward]) => {
+        toggleFilters(reward.filters, true);
+    });
+    nodecg.listenFor('countdown-end', filters => {
+        toggleFilters(filters, false);
+    });
+
+    function toggleFilters(filters, enabled) {
+        if (filters) {
+            for (const filter of filters) {
+                obs.send('SetSourceFilterVisibility', {
+                    sourceName: filter.source,
+                    filterName: filter.name,
+                    filterEnabled: enabled
+                });
+            }
+        }
+    }
 
     function createLabelForm(el, label) {
       const replicant = nodecg.Replicant(label);
