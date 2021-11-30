@@ -5,6 +5,7 @@
     <title>Comboio do Saico</title>
     <link rel="stylesheet" href="comboio.css"/>
     <script type="module">
+      import '../node_modules/obs-websocket-js/dist/obs-websocket.min.js';
       import '../node_modules/modern-async/dist/modern-async.umd.js';
       import '../node_modules/microsoft-cognitiveservices-speech-sdk/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle-min.js';
       import { Duration } from '../node_modules/luxon/build/es6/luxon.js';
@@ -20,11 +21,40 @@
       const track = nodecg.Replicant('track');
       const counters = nodecg.Replicant('counters');
 
-      const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(nodecg.bundleConfig.tts.speechKey, nodecg.bundleConfig.tts.region);
-      speechConfig.speechSynthesisVoiceName = nodecg.bundleConfig.tts.voiceName;
+      const config = nodecg.bundleConfig;
+      const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(config.tts.speechKey, config.tts.region);
+      speechConfig.speechSynthesisVoiceName = config.tts.voiceName;
       const tee = new Audio("media/tee.ogg");
       tee.volume = 0.5;
-      const alertQueue = new modernAsync.Queue(1);
+      const eventQueue = new modernAsync.Queue(1);
+      const timerQueue = new modernAsync.Queue(1);
+      const obs = new OBSWebSocket();
+      let mediaLock;
+
+      obs.connect(config.obs);
+      obs.on('SwitchScenes', event => {
+        if (event['scene-name'] === config.opening.sceneName) {
+          nodecg.sendMessage('countdown', ['Próxima partida', {countdown: config.opening.duration}]);
+        }
+      });
+      obs.on('MediaEnded', event => {
+        if (mediaLock) {
+          mediaLock.resolve();
+          mediaLock = null;
+        }
+      });
+
+      function toggleFilters(filters, enabled) {
+        if (filters) {
+          for (const filter of filters) {
+            obs.send('SetSourceFilterVisibility', {
+              sourceName: filter.source,
+              filterName: filter.name,
+              filterEnabled: enabled
+            });
+          }
+        }
+      }
 
       document.addEventListener('DOMContentLoaded', async () => {
         const panelFollower = new LEDPanel(document.getElementById('display-follower'), {x: 80, y: 8}, {x: 4, y: 5});
@@ -35,6 +65,17 @@
         const panelCounters = [1, 2, 3].map(i => new LEDPanel(document.getElementById(`counter${i}`), {x: 104, y: 8}, {x: 5, y: 5}));
         const ibmFont = await $Font(fetchline('fonts/ibm8x8.bdf'));
         const thinFont = await $Font(fetchline('fonts/ticker.bdf'));
+        let alertLock = false;
+
+        function setTrack(value) {
+          if (!alertLock && timerQueue.running === 0) {
+            if (value) {
+              panelAlerts.drawLoopable(thinFont, value.normalize('NFD'), '#bfff00', 50);
+            } else {
+              panelAlerts.clearAll();
+            }
+          }
+        }
 
         follower.on('change', value => {
           panelFollower.drawLoopable(thinFont, value, '#bfff00', 100);
@@ -53,17 +94,20 @@
         });
 
         track.on('change', value => {
-          if (alertQueue.running === 0) {
-            if (value) {
-              panelAlerts.drawLoopable(thinFont, value.normalize('NFD'), '#bfff00', 50);
-            } else {
-              panelAlerts.clearAll();
-            }
-          }
+          setTrack(value);
+        });
+
+        nodecg.listenFor('play', sourceName => {
+          eventQueue.exec(async () => {
+            mediaLock = new modernAsync.Deferred();
+            obs.send('RestartMedia', { sourceName });
+            await mediaLock.promise;
+          });
         });
 
         nodecg.listenFor('alert', value => {
-          alertQueue.exec(async () => {
+          eventQueue.exec(async () => {
+            alertLock = true;
             const tts = new SpeechSDK.SpeechSynthesizer(speechConfig);
             if (value.title) {
               tee.play();
@@ -79,30 +123,25 @@
               await panelAlerts.drawScroll(ibmFont, value.message, '#ff9900', 25);
             }
             tts.close();
-            if (alertQueue.pending === 0 && track.value) {
-              panelAlerts.drawLoopable(thinFont, track.value.normalize('NFD'), '#bfff00', 50);
-            }
+          }).then(() => {
+            alertLock = false;
+            setTrack(track.value);
           });
         });
 
-        async function countdown(title, duration, filters) {
-          if (duration.valueOf() >= 0) {
-            if (alertQueue.running === 0) {
-              await panelAlerts.drawLoopable(ibmFont, `${title}: ${duration.toFormat('mm:ss')}`, '#ff9900', 25);
-            }
-            setTimeout(() => countdown(title, duration.minus(1000), filters), 1000);
-          } else {
-            panelAlerts.clearAll();
-            nodecg.sendMessage('countdown-end', filters);
-          }
-        }
-
         nodecg.listenFor('countdown', ([title, reward]) => {
-          countdown(title, Duration.fromMillis(reward.countdown*1000), reward.filters);
-        });
-
-        nodecg.listenFor('clear-alert', () => {
-          panelAlerts.clearAll();
+          timerQueue.exec(async () => {
+            toggleFilters(reward.filters, true);
+            for (let duration = Duration.fromMillis(reward.countdown*1000); duration.valueOf() >= 0; duration = duration.minus(1000)) {
+              if (!alertLock) {
+                panelAlerts.drawLoopable(ibmFont, `${title}: ${duration.toFormat('mm:ss')}`, '#ff9900', 25);
+              }
+              await modernAsync.sleep(1000);
+            }
+            toggleFilters(reward.filters, false);
+          }).then(() => {
+            setTrack(track.value);
+          });
         });
 
         counters.on('change', value => {
