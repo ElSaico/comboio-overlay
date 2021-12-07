@@ -62,7 +62,7 @@
         const panelCheer = new LEDPanel(document.getElementById('display-cheer'), {x: 80, y: 8}, {x: 4, y: 5});
         const panelGoal = new LEDPanel(document.getElementById('display-goal'), {x: 80, y: 8}, {x: 4, y: 5});
         const panelAlerts = new LEDPanel(document.getElementById('alerts'), {x: 200, y: 8}, {x: 4, y: 5});
-        const panelCounters = [1, 2, 3].map(i => new LEDPanel(document.getElementById(`counter${i}`), {x: 104, y: 8}, {x: 5, y: 5}));
+        const panelCounters = [1, 2, 3].map(i => new LEDPanel(document.getElementById(`counter${i}`), {x: 130, y: 8}, {x: 4, y: 5}));
         const ibmFont = await $Font(fetchline('fonts/ibm8x8.bdf'));
         const thinFont = await $Font(fetchline('fonts/ticker.bdf'));
         let alertLock = false;
@@ -147,7 +147,7 @@
         counters.on('change', value => {
           const visible = value.filter(counter => counter.show);
           for (let i = 0; i < 3; ++i) {
-            const label = visible[i] ? `!${visible[i].command.padEnd(7)} ${visible[i].count.toString().padStart(4)}` : '';
+            const label = visible[i] ? `!${visible[i].command.padEnd(10)} ${visible[i].count.toString().padStart(4)}` : '';
             panelCounters[i].drawLoopable(ibmFont, label, '#ff9900');
           }
         });
