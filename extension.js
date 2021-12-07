@@ -91,7 +91,7 @@ module.exports = nodecg => {
             listener.subscribeToChannelRedemptionAddEvents(config.channel.id, event => {
                 if (event.rewardTitle === config.tts.reward) {
                     nodecg.sendMessage('alert', { message: event.input });
-                } else {
+                } else if (config.rewards[event.rewardTitle]) {
                     const reward = config.rewards[event.rewardTitle];
                     if (reward.source) {
                         nodecg.sendMessage('play', reward.source);
