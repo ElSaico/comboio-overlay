@@ -32,11 +32,6 @@
       let mediaLock;
 
       obs.connect(config.obs);
-      obs.on('SwitchScenes', event => {
-        if (event['scene-name'] === config.opening.sceneName) {
-          nodecg.sendMessage('countdown', ['Próxima partida', {countdown: config.opening.duration}]);
-        }
-      });
       obs.on('MediaEnded', event => {
         if (mediaLock) {
           mediaLock.resolve();
@@ -66,13 +61,18 @@
         const ibmFont = await $Font(fetchline('fonts/ibm8x8.bdf'));
         const thinFont = await $Font(fetchline('fonts/ticker.bdf'));
         let alertLock = false;
+        let idleIdx = 0;
+        let idleTimer;
 
-        function setTrack(value) {
+        function setIdleAlert(track) {
+          clearInterval(idleTimer);
           if (!alertLock && timerQueue.running === 0) {
-            if (value) {
-              panelAlerts.drawLoopable(thinFont, value.normalize('NFD'), '#bfff00', 50);
+            if (track) {
+              panelAlerts.drawLoopable(thinFont, track.normalize('NFD'), '#bfff00', 50);
             } else {
-              panelAlerts.clearAll();
+              idleTimer = setInterval(() => {
+                panelAlerts.drawLoopable(thinFont, config.idle[idleIdx++ % config.idle.length], '#bfff00', 50);
+              }, 5000);
             }
           }
         }
@@ -94,7 +94,7 @@
         });
 
         track.on('change', value => {
-          setTrack(value);
+          setIdleAlert(value);
         });
 
         nodecg.listenFor('play', sourceName => {
@@ -107,6 +107,7 @@
 
         nodecg.listenFor('alert', value => {
           eventQueue.exec(async () => {
+            clearInterval(idleTimer);
             alertLock = true;
             const tts = new SpeechSDK.SpeechSynthesizer(speechConfig);
             if (value.title) {
@@ -125,7 +126,7 @@
             tts.close();
           }).then(() => {
             alertLock = false;
-            setTrack(track.value);
+            setIdleAlert(track.value);
           });
         });
 
@@ -140,7 +141,7 @@
             }
             toggleFilters(reward.filters, false);
           }).then(() => {
-            setTrack(track.value);
+            setIdleAlert(track.value);
           });
         });
 
