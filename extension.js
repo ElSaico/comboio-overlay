@@ -22,6 +22,7 @@ function pluralize(amount, singular, plural) {
 module.exports = nodecg => {
     const config = nodecg.bundleConfig;
     const tokens = nodecg.Replicant('tokens');
+    const secretCount = nodecg.Replicant('secret-counters');
 
     const follower = nodecg.Replicant('follower');
     const subscriber = nodecg.Replicant('subscriber');
@@ -120,6 +121,24 @@ module.exports = nodecg => {
     if (process.env.MOCK_CHAT) {
         chatClient.onAnyMessage(msg => nodecg.log.debug(msg));
     }
+    function handleCommand(channel, message, privmsg, name, command) {
+        if (command.alias) {
+            command = config.commands[command.alias];
+        }
+        if (command.counter) {
+            // we assume the counter key only applies to secret commands
+            chatClient.say(channel, command.counter.replace('####', ++secretCount.value[name]));
+        }
+        if (command.input) {
+            chatClient.say(channel, command.input.replace('####', message.split(' ')[1]));
+        }
+        if (command.reply) {
+            chatClient.say(channel, command.reply, { replyTo: privmsg });
+        }
+        if (command.message) {
+            chatClient.say(channel, command.message);
+        }
+    }
     chatClient.onMessage((channel, user, message, privmsg) => {
         if (privmsg.isCheer) {
             const username = displayUser(privmsg.userInfo.displayName, user);
@@ -134,16 +153,10 @@ module.exports = nodecg => {
             let command = args.shift().toLowerCase();
             if (command === 'comandos') {
                 chatClient.say(channel, `Comandos disponíveis: ${Object.keys(config.commands).map(command => '!'+command).join(' ')}`);
+            } else if (config.secret[command]) {
+                handleCommand(channel, message, privmsg, command, config.secret[command]);
             } else if (config.commands[command]) {
-                if (config.commands[command].alias) {
-                    command = config.commands[command].alias;
-                }
-                if (config.commands[command].reply) {
-                    chatClient.say(channel, config.commands[command].reply, { replyTo: privmsg });
-                }
-                if (config.commands[command].message) {
-                    chatClient.say(channel, config.commands[command].message);
-                }
+                handleCommand(channel, message, privmsg, command, config.commands[command]);
             } else {
                 const counter = nodecg.readReplicant('counters').find(counter => counter.command === command);
                 if (counter && counter.show) {
@@ -165,6 +178,9 @@ module.exports = nodecg => {
     }
     chatClient.onSub(onSub);
     chatClient.onResub(onSub);
+    chatClient.onBan((channel, user) => {
+        nodecg.sendMessage('play', 'Banido');
+    });
     chatClient.onRaid((channel, user, info, notice) => {
         nodecg.sendMessage('alert', {
             user_name: displayUser(info.displayName, user),
