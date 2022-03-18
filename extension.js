@@ -125,6 +125,9 @@ module.exports = nodecg => {
         if (command.alias) {
             command = config.commands[command.alias];
         }
+        if (command.play) {
+            nodecg.sendMessage('play', command.play);
+        }
         if (command.counter) {
             // we assume the counter key only applies to secret commands
             chatClient.say(channel, command.counter.replace('####', ++secretCount.value[name]));
