@@ -62,6 +62,7 @@ module.exports = nodecg => {
         }
         data.amount = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: data.currency }).format(data.amount);
         nodecg.sendMessage('alert', {
+            tee: true,
             user_name: data.from_name,
             title: `Doação de ${data.amount} enviada para o Comboio`,
             message: data.message
@@ -85,6 +86,7 @@ module.exports = nodecg => {
             listener.subscribeToChannelFollowEvents(config.channel.id, event => {
                 follower.value = displayUser(event.userDisplayName, event.userName);
                 nodecg.sendMessage('alert', {
+                    tee: true,
                     user_name: follower.value,
                     title: 'Novo passageiro no Comboio'
                 });
@@ -142,10 +144,11 @@ module.exports = nodecg => {
             chatClient.say(channel, command.message);
         }
     }
-    chatClient.onMessage((channel, user, message, privmsg) => {
+    chatClient.onMessage(async (channel, user, message, privmsg) => {
         if (privmsg.isCheer) {
             const username = displayUser(privmsg.userInfo.displayName, user);
             nodecg.sendMessage('alert', {
+                tee: true,
                 user_name: username,
                 title: `${pluralize(privmsg.bits, 'bit enviado', 'bits enviados')} para o Comboio`,
                 message: message
@@ -156,6 +159,17 @@ module.exports = nodecg => {
             let command = args.shift().toLowerCase();
             if (command === 'comandos') {
                 chatClient.say(channel, `Comandos disponíveis: ${Object.keys(config.commands).map(command => '!'+command).join(' ')}`);
+            } else if (command === 'sh') {
+                if (privmsg.userInfo.isBroadcaster || privmsg.userInfo.isMod) {
+                    const user = await userApiClient.users.getUserByName(args[0]);
+                    const userChannel = await userApiClient.channels.getChannelInfo(user);
+                    nodecg.sendMessage('alert', {
+                        title: 'O Comboio do Saico recomenda este canal',
+                        user_name: displayUser(userChannel.displayName, userChannel.name),
+                        game: userChannel.gameName
+                    });
+                    chatClient.say(channel, `Recomendação do Comboio: https://twitch.tv/${userChannel.name} - siga você também!`);
+                }
             } else if (config.secret[command]) {
                 handleCommand(channel, message, privmsg, command, config.secret[command]);
             } else if (config.commands[command]) {
@@ -174,6 +188,7 @@ module.exports = nodecg => {
     function onSub(channel, user, info, notice) {
         subscriber.value = displayUser(info.displayName, user);
         nodecg.sendMessage('alert', {
+            tee: true,
             user_name: subscriber.value,
             title: `Passe adquirido, totalizando ${pluralize(info.months, 'mês', 'meses')}`,
             message: info.message
@@ -186,6 +201,7 @@ module.exports = nodecg => {
     });
     chatClient.onRaid((channel, user, info, notice) => {
         nodecg.sendMessage('alert', {
+            tee: true,
             user_name: displayUser(info.displayName, user),
             title: `Recebendo uma raid com ${pluralize(info.viewerCount, 'pessoa', 'pessoas')}`
         });

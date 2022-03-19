@@ -37,8 +37,16 @@ export default class LEDPanel {
             this.leds[j][i].setAttribute('fill', this.offColor);
         }
     }
+    clearCol(j) {
+        for (let i = 0; i < this.resolution.y; ++i) {
+            this.leds[j][i].setAttribute('fill', this.offColor);
+        }
+    }
     drawRow(i, row, color) {
         [...row].forEach((col, j) => this.leds[j][i].setAttribute('fill', col === '1' ? color : this.offColor));
+    }
+    drawCol(j, col, color) {
+        [...col].forEach((row, i) => this.leds[j][i].setAttribute('fill', row === '1' ? color : this.offColor));
     }
     drawMatrix(data, color) {
         data.forEach((row, i) => this.drawRow(i, row, color));
@@ -96,6 +104,22 @@ export default class LEDPanel {
             for (let i = 0; i < this.resolution.y; ++i) {
                 yield new Promise(cb => setTimeout(cb, interval));
                 this.clearRow(i);
+            }
+        });
+    }
+    drawAnimatedHorizontal(font, text, color, interval) {
+        return __awaiter(this, void 0, void 0, function* () {
+            clearInterval(this.timer);
+            const bitmap = font.draw(text);
+            const offset = (this.resolution.x - bitmap.width()) / 2;
+            for (let j = 0; j < bitmap.width(); ++j) {
+                const colBitmap = bitmap.clone().crop(1, bitmap.height(), j, 0);
+                this.drawCol(offset+j, colBitmap.todata(0).replaceAll('\n', ''), color);
+                yield new Promise(cb => setTimeout(cb, interval));
+            }
+            for (let j = 0; j < bitmap.width(); ++j) {
+                yield new Promise(cb => setTimeout(cb, interval));
+                this.clearCol(offset+j);
             }
         });
     }

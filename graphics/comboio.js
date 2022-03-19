@@ -102,15 +102,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     eventQueue.exec(async () => {
       clearInterval(idleTimer);
       alertLock = true;
+      let delay = 0;
+      if (value.tee) {
+        tee.play();
+        delay = 9000;
+      }
       const tts = new SpeechSDK.SpeechSynthesizer(speechConfig);
       if (value.title) {
-        tee.play();
-        setTimeout(() => tts.speakTextAsync(value.title), 9000);
+        setTimeout(() => tts.speakTextAsync(value.title), delay);
         await panelAlerts.drawScroll(ibmFont, value.title, '#ff9900', 25);
       }
       if (value.user_name) {
         setTimeout(() => tts.speakTextAsync(value.user_name), 500);
         await panelAlerts.drawAnimatedVertical(thinFont, value.user_name, '#bfff00', 250);
+      }
+      if (value.game) {
+        await new Promise(cb => setTimeout(cb, 1000));
+        setTimeout(() => tts.speakTextAsync(value.game), 500);
+        await panelAlerts.drawAnimatedHorizontal(thinFont, value.game, '#bfff00', 100);
       }
       if (value.message) {
         setTimeout(() => tts.speakTextAsync(value.message), 250);
