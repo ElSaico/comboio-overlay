@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (value.game) {
         await new Promise(cb => setTimeout(cb, 1000));
         setTimeout(() => tts.speakTextAsync(value.game), 500);
-        await panelAlerts.drawAnimatedHorizontal(thinFont, value.game, '#bfff00', 100);
+        await panelAlerts.drawAnimatedHorizontal(thinFont, value.game, '#bfff00', 50);
       }
       if (value.message) {
         setTimeout(() => tts.speakTextAsync(value.message), 250);

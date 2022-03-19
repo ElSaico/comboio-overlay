@@ -111,7 +111,7 @@ export default class LEDPanel {
         return __awaiter(this, void 0, void 0, function* () {
             clearInterval(this.timer);
             const bitmap = font.draw(text);
-            const offset = (this.resolution.x - bitmap.width()) / 2;
+            const offset = (this.resolution.x - bitmap.width()) >> 1;
             for (let j = 0; j < bitmap.width(); ++j) {
                 const colBitmap = bitmap.clone().crop(1, bitmap.height(), j, 0);
                 this.drawCol(offset+j, colBitmap.todata(0).replaceAll('\n', ''), color);
