@@ -44,6 +44,7 @@
     "luxon": "^2.0.2",
     "microsoft-cognitiveservices-speech-sdk": "1.18.1",
     "modern-async": "1.0.3",
-    "obs-websocket-js": "^4.0.3"
+    "obs-websocket-js": "^4.0.3",
+    "underscore": "^1.13.2"
   }
 }
