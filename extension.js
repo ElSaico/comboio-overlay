@@ -127,6 +127,9 @@ module.exports = nodecg => {
         if (command.alias) {
             command = config.commands[command.alias];
         }
+        if (command.enabled === false) {
+            return;
+        }
         if (command.play) {
             nodecg.sendMessage('play', command.play);
         }
