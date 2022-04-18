@@ -59,7 +59,7 @@ export default class LEDPanel {
     drawLooping(bitmap, color, interval) {
         let offset = 0;
         this.timer = setInterval(() => {
-            offset %= bitmap.width();
+            offset = (offset+1) % bitmap.width();
             const leftWidth = Math.min(bitmap.width() - offset, this.resolution.x);
             const newBitmap = bitmap.clone().crop(leftWidth, bitmap.height(), offset);
             if (newBitmap.width() < this.resolution.x) {
@@ -72,7 +72,7 @@ export default class LEDPanel {
         clearInterval(this.timer);
         const bitmap = font.draw(text);
         if (bitmap.width() > this.resolution.x) {
-            bitmap.crop(bitmap.width() + font.headers.fbbx, bitmap.height());
+            bitmap.crop(bitmap.width() + 2*font.headers.fbbx, bitmap.height());
             this.drawLooping(bitmap, color, interval);
         }
         else {

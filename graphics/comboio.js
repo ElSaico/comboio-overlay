@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const panelAlerts = new LEDPanel(document.getElementById('alerts'), {x: 200, y: 8}, {x: 4, y: 5});
   const panelCounters = [1, 2, 3].map(i => new LEDPanel(document.getElementById(`counter${i}`), {x: 130, y: 8}, {x: 4, y: 5}));
   const ibmFont = await $Font(fetchline('fonts/ibm8x8.bdf'));
-  const thinFont = await $Font(fetchline('fonts/ticker.bdf'));
+  const thinFont = await $Font(fetchline('fonts/metro.bdf'));
   let alertLock = false;
   let idleIdx = 0;
   let idleTimer;
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         panelAlerts.drawLoopable(thinFont, track.normalize('NFD'), '#bfff00', 50);
       } else {
         idleTimer = setInterval(() => {
-          panelAlerts.drawLoopable(thinFont, config.idle[idleIdx++ % config.idle.length], '#bfff00', 50);
+          panelAlerts.drawCentered(thinFont.draw(config.idle[idleIdx++ % config.idle.length]), '#bfff00');
         }, 5000);
       }
     }
