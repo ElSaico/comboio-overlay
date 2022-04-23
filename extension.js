@@ -147,6 +147,16 @@ module.exports = nodecg => {
             chatClient.say(channel, command.message);
         }
     }
+    async function sh(channel, username) {
+        const user = await userApiClient.users.getUserByName(username);
+        const userChannel = await userApiClient.channels.getChannelInfo(user);
+        nodecg.sendMessage('alert', {
+            title: 'O Comboio do Saico recomenda este canal',
+            user_name: displayUser(userChannel.displayName, userChannel.name),
+            game: userChannel.gameName
+        });
+        chatClient.say(channel, `Recomendação do Comboio: https://twitch.tv/${userChannel.name} - siga você também!`);
+    }
     chatClient.onMessage(async (channel, user, message, privmsg) => {
         if (privmsg.isCheer) {
             const username = displayUser(privmsg.userInfo.displayName, user);
@@ -164,14 +174,7 @@ module.exports = nodecg => {
                 chatClient.say(channel, `Comandos disponíveis: ${Object.keys(config.commands).map(command => '!'+command).join(' ')}`);
             } else if (command === 'sh') {
                 if (privmsg.userInfo.isBroadcaster || privmsg.userInfo.isMod) {
-                    const user = await userApiClient.users.getUserByName(args[0]);
-                    const userChannel = await userApiClient.channels.getChannelInfo(user);
-                    nodecg.sendMessage('alert', {
-                        title: 'O Comboio do Saico recomenda este canal',
-                        user_name: displayUser(userChannel.displayName, userChannel.name),
-                        game: userChannel.gameName
-                    });
-                    chatClient.say(channel, `Recomendação do Comboio: https://twitch.tv/${userChannel.name} - siga você também!`);
+                    sh(channel, args[0]);
                 }
             } else if (config.secret[command]) {
                 handleCommand(channel, message, privmsg, command, config.secret[command]);
@@ -225,10 +228,17 @@ module.exports = nodecg => {
             } else {
                 const [duration, ...titleRest] = newMessage.embeds[0].title.split(' - ');
                 const nowPlaying = titleRest.join(' - ');
-                track.value = nowPlaying;
-                if (config.discord.autoSh[nowPlaying]) {
-                    nodecg.log.info('AutoPimba identified:', config.discord.autoSh[nowPlaying]);
-                    setTimeout(() => chatClient.say(config.channel.name, `!sh ${config.discord.autoSh[nowPlaying]} #autopimba`), autoShDelay);
+                if (track.value !== nowPlaying) {
+                    track.value = nowPlaying;
+                    const username = config.discord.autoSh[nowPlaying];
+                    if (username) {
+                        nodecg.log.info('AutoPimba identified:', username);
+                        setTimeout(() => {
+                            chatClient.say(config.channel.name, `!sh ${username} #autopimba`);
+                            // the chat listener ignores our own messages, thus we need to manually trigger its effect
+                            sh(config.channel.name, username);
+                        }, autoShDelay);
+                    }
                 }
             }
         }
