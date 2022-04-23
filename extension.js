@@ -50,6 +50,7 @@ module.exports = nodecg => {
     });
 
     const webhook = express();
+    webhook.use(express.json());
     webhook.use(express.urlencoded());
     webhook.use((req, res, next) => {
         res.set('X-Clacks-Overhead', 'GNU Terry Pratchett');
@@ -68,6 +69,22 @@ module.exports = nodecg => {
             message: data.message
         });
         donate.value = `${data.from_name} (${data.amount})`;
+        res.status(200).end();
+    });
+    webhook.post('/tipa', (req, res) => {
+        if (req.get('X-Tipa-Webhook-Secret-Token') !== config.webhook.tipa) {
+            res.status(404).end();
+            return;
+        }
+        const tip = req.body.payload.tip;
+        const amount = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(tip.amount);
+        nodecg.sendMessage('alert', {
+            tee: true,
+            user_name: tip.name,
+            title: `Pix de ${amount} enviado para o Comboio`,
+            message: tip.message
+        });
+        donate.value = `${tip.name} (${amount})`;
         res.status(200).end();
     });
 
