@@ -155,7 +155,7 @@ module.exports = nodecg => {
             user_name: displayUser(userChannel.displayName, userChannel.name),
             game: userChannel.gameName
         });
-        chatClient.say(channel, `Recomendação do Comboio: https://twitch.tv/${userChannel.name} - siga você também!`);
+        chatClient.say(channel, `Recomendação do Comboio: https://twitch.tv/${userChannel.name}, que estava em ${userChannel.gameName} - siga você também!`);
     }
     chatClient.onMessage(async (channel, user, message, privmsg) => {
         if (privmsg.isCheer) {
@@ -196,7 +196,7 @@ module.exports = nodecg => {
         nodecg.sendMessage('alert', {
             tee: true,
             user_name: subscriber.value,
-            title: `Passe adquirido, totalizando ${pluralize(info.months, 'mês', 'meses')}`,
+            title: `Passe adquirido, somando ${pluralize(info.months, 'mês', 'meses')}`,
             message: info.message
         });
     }
@@ -209,7 +209,7 @@ module.exports = nodecg => {
         nodecg.sendMessage('alert', {
             tee: true,
             user_name: displayUser(info.displayName, user),
-            title: `Recebendo uma raid com ${pluralize(info.viewerCount, 'pessoa', 'pessoas')}`
+            title: `Embarque de uma raid com ${pluralize(info.viewerCount, 'pessoa', 'pessoas')}`
         });
     });
     nodecg.listenFor('chat', message => {
