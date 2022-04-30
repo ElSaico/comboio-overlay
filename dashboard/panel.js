@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
             type: "object",
             properties: {
               command: { type: "string", title: "Command", required: true },
+              description: { type: "string", title: "Description", required: true },
               message: { type: "string", title: "Message", description: "Use #### to replace with count" },
               count: { type: "integer", title: "Count", default: 0 },
               show: { type: "boolean", title: "Show on screen", required: true }
@@ -48,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
             type: "section",
             items: [
               { key: "counters[].command", prepend: "!" },
+              "counters[].description",
               "counters[].message",
               "counters[].count",
               "counters[].show"

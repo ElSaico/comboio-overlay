@@ -22,6 +22,7 @@ function pluralize(amount, singular, plural) {
 module.exports = nodecg => {
     const config = nodecg.bundleConfig;
     const tokens = nodecg.Replicant('tokens');
+    const counters = nodecg.Replicant('counters');
     const secretCount = nodecg.Replicant('secret-counters');
 
     const follower = nodecg.Replicant('follower');
@@ -188,7 +189,13 @@ module.exports = nodecg => {
             const args = message.slice(1).split(' ');
             let command = args.shift().toLowerCase();
             if (command === 'comandos') {
-                chatClient.say(channel, `Comandos disponíveis: ${Object.keys(config.commands).map(command => '!'+command).join(' ')}`);
+                chatClient.say(channel, `Comandos disponíveis: !sh !contadores ${Object.keys(config.commands).map(command => '!'+command).join(' ')}`);
+            } else if (command === 'contadores') {
+                counters.value
+                    .filter(counter => counter.show)
+                    .forEach(counter => {
+                        chatClient.say(channel, `!${counter.command} - ${counter.description}`, { replyTo: privmsg });
+                    });
             } else if (command === 'sh') {
                 if (privmsg.userInfo.isBroadcaster || privmsg.userInfo.isMod) {
                     sh(channel, args[0]);
@@ -198,7 +205,7 @@ module.exports = nodecg => {
             } else if (config.commands[command]) {
                 handleCommand(channel, message, privmsg, command, config.commands[command]);
             } else {
-                const counter = nodecg.readReplicant('counters').find(counter => counter.command === command);
+                const counter = counters.value.find(counter => counter.command === command);
                 if (counter && counter.show) {
                     counter.count++;
                     if (counter.message) {
