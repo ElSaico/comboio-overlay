@@ -227,7 +227,7 @@ module.exports = nodecg => {
     chatClient.onSub(onSub);
     chatClient.onResub(onSub);
     chatClient.onBan((channel, user) => {
-        nodecg.sendMessage('play', 'Banido');
+        nodecg.sendMessage('play', 'banido.mp4');
     });
     chatClient.onRaid((channel, user, info, notice) => {
         nodecg.sendMessage('alert', {

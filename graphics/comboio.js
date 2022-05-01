@@ -25,12 +25,6 @@ const obs = new OBSWebSocket();
 let mediaLock;
 
 obs.connect(config.obs);
-obs.on('MediaEnded', event => {
-  if (mediaLock) {
-    mediaLock.resolve();
-    mediaLock = null;
-  }
-});
 
 function toggleFilters(filters, enabled) {
   if (filters) {
@@ -53,6 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const panelCounters = [1, 2, 3].map(i => new LEDPanel(document.getElementById(`counter${i}`), {x: 130, y: 8}, {x: 4, y: 5}));
   const ibmFont = await $Font(fetchline('fonts/ibm8x8.bdf'));
   const thinFont = await $Font(fetchline('fonts/metro.bdf'));
+  const commandMedia = document.getElementById('command-media');
   let alertLock = false;
   let idleIdx = 0;
   let idleTimer;
@@ -69,6 +64,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
   }
+
+  commandMedia.onended = e => {
+    commandMedia.removeAttribute('src');
+    commandMedia.load();
+    if (mediaLock) {
+      mediaLock.resolve();
+      mediaLock = null;
+    }
+  };
 
   follower.on('change', value => {
     panelFollower.drawLoopable(thinFont, value, '#bfff00', 100);
@@ -90,10 +94,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     setIdleAlert(value);
   });
 
-  nodecg.listenFor('play', sourceName => {
+  nodecg.listenFor('play', fileName => {
     eventQueue.exec(async () => {
       mediaLock = new modernAsync.Deferred();
-      obs.send('RestartMedia', { sourceName });
+      commandMedia.src = `media/${fileName}`;
+      commandMedia.play();
       await mediaLock.promise;
     });
   });

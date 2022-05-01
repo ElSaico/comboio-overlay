@@ -11,14 +11,18 @@ h3 {
     color: #006aba;
     width: 320px;
     font-size: 32px;
-    font-family: 'Barlow', sans-serif;
+    font-family: 'Ubuntu', sans-serif;
     font-weight: bold;
     text-align: center;
-    text-transform: uppercase;
 }
 
-svg {
+svg, video {
     position: absolute;
+}
+
+#command-media {
+    left: 365px;
+    top: 40px;
 }
 
 #label-follower {
