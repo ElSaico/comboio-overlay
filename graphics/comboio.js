@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     clearInterval(idleTimer);
     if (!alertLock && timerQueue.running === 0) {
       if (track) {
-        panelAlerts.drawLoopable(thinFont, track.normalize('NFD'), '#bfff00', 50);
+        panelAlerts.drawLoopable(thinFont, track, '#bfff00', 50);
       } else {
         idleTimer = setInterval(() => {
           panelAlerts.drawCentered(thinFont.draw(config.idle[idleIdx++ % config.idle.length]), '#bfff00');
