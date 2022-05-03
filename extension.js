@@ -49,7 +49,6 @@ module.exports = nodecg => {
     });
 
   const webhook = express();
-  webhook.use(express.json());
   webhook.use(express.urlencoded());
   webhook.use((req, res, next) => {
     res.set('X-Clacks-Overhead', 'GNU Terry Pratchett');
@@ -70,7 +69,7 @@ module.exports = nodecg => {
     donate.value = `${data.from_name} (${data.amount})`;
     res.status(200).end();
   });
-  webhook.post('/tipa', (req, res) => {
+  webhook.post('/tipa', express.json(), (req, res) => {
     if (req.get('X-Tipa-Webhook-Secret-Token') !== config.webhook.tipa) {
       res.status(404).end();
       return;
@@ -99,6 +98,7 @@ module.exports = nodecg => {
   listener.apply(webhook).then(() => {
     webhook.listen(config.eventSub.port, async () => {
       await listener.markAsReady();
+      nodecg.log.info('Twitch EventSub ready for follows and redemptions');
       listener.subscribeToChannelFollowEvents(config.channel.id, event => {
         follower.value = displayUser(event.userDisplayName, event.userName);
         nodecg.sendMessage('alert', {
