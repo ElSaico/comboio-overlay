@@ -50,17 +50,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   const commandMedia = document.getElementById('command-media');
   let alertLock = false;
   let idleIdx = 0;
-  let idleTimer;
+  const idleAlertBar = new modernAsync.Scheduler(async () => {
+    panelAlerts.drawCentered(thinFont.draw(config.idle[idleIdx++ % config.idle.length]), '#bfff00');
+  }, 5000);
 
-  function setIdleAlert(track) {
-    clearInterval(idleTimer);
+  function resetAlertBar(track) {
+    idleAlertBar.stop();
     if (!alertLock && timerQueue.running === 0) {
       if (track) {
         panelAlerts.drawLoopable(thinFont, track, '#bfff00', 50);
       } else {
-        idleTimer = setInterval(() => {
-          panelAlerts.drawCentered(thinFont.draw(config.idle[idleIdx++ % config.idle.length]), '#bfff00');
-        }, 5000);
+        idleAlertBar.start();
       }
     }
   }
@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   track.on('change', value => {
-    setIdleAlert(value);
+    resetAlertBar(value);
   });
 
   nodecg.listenFor('play', fileName => {
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   nodecg.listenFor('alert', value => {
     eventQueue.exec(async () => {
-      clearInterval(idleTimer);
+      idleAlertBar.stop();
       alertLock = true;
       let delay = 0;
       if (value.tee) {
@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       tts.close();
     }).then(() => {
       alertLock = false;
-      setIdleAlert(track.value);
+      resetAlertBar(track.value);
     });
   });
 
@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       toggleFilters(reward.filters, false);
     }).then(() => {
-      setIdleAlert(track.value);
+      resetAlertBar(track.value);
     });
   });
 
