@@ -7,8 +7,10 @@ const eventSub = require('@twurple/eventsub');
 
 const express = require('express');
 const discordjs = require('discord.js');
+const modernAsync = require('modern-async');
 
 const autoShDelay = 5000;
+const autoMessageInterval = 10*60000;
 
 function displayUser(name, login, anonymous) {
   if (anonymous) return '???';
@@ -99,6 +101,12 @@ module.exports = nodecg => {
     webhook.listen(config.eventSub.port, async () => {
       await listener.markAsReady();
       nodecg.log.info('Twitch EventSub ready for follows and redemptions');
+      listener.subscribeToStreamOnlineEvents(config.channel.id, event => {
+        autoMessages.start();
+      });
+      listener.subscribeToStreamOfflineEvents(config.channel.id, event => {
+        autoMessages.stop();
+      });
       listener.subscribeToChannelFollowEvents(config.channel.id, event => {
         follower.value = displayUser(event.userDisplayName, event.userName);
         nodecg.sendMessage('alert', {
@@ -138,6 +146,12 @@ module.exports = nodecg => {
     chatClient.onAnyMessage(msg => nodecg.log.debug(msg));
   }
 
+  let autoMessageIdx = 0;
+  const autoMessages = new modernAsync.Scheduler(async () => {
+    const [username, message] = config.sh[autoMessageIdx++ % config.sh.length];
+    chatClient.say(config.channel.name, `!sh ${username} - ${message} #ComboioRecomenda`);
+    sh(config.channel.name, username);
+  }, autoMessageInterval);
   function handleCommand(channel, message, privmsg, name, command) {
     if (command.alias) {
       command = config.commands[command.alias];
