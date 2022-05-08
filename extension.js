@@ -33,6 +33,12 @@ module.exports = nodecg => {
   const donate = nodecg.Replicant('donate');
   const track = nodecg.Replicant('track');
 
+  Object.keys(config.secret).forEach(key => {
+    if (config.secret[key].counter && !Number.isInteger(secretCount.value[key])) {
+      secretCount.value[key] = 0;
+    }
+  });
+
   const userAuthProvider = new auth.RefreshingAuthProvider(
     {
       clientId: config.twitchApp.id,
