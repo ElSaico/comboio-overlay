@@ -7,6 +7,7 @@ const eventSub = require('@twurple/eventsub');
 
 const express = require('express');
 const discordjs = require('discord.js');
+const iconv = require('iconv-lite');
 const modernAsync = require('modern-async');
 
 const autoShDelay = 5000;
@@ -19,6 +20,16 @@ function displayUser(name, login, anonymous) {
 
 function pluralize(amount, singular, plural) {
   return amount === 1 ? `${amount} ${singular}` : `${amount} ${plural}`;
+}
+
+/*
+ * Our Metro font only supports Latin-1 characters, thus some UTF-8 characters
+ * (i.e. U+2212 Minus Sign, which appears in some game names - thanks Twitch!)
+ * need to get coerced accordingly
+ */
+function latinize(text) {
+  const buffer = iconv.encode(text, 'iso-8859-1');
+  return iconv.decode(buffer, 'iso-8859-1');
 }
 
 module.exports = nodecg => {
@@ -179,7 +190,7 @@ module.exports = nodecg => {
     nodecg.sendMessage('alert', {
       title: 'O Comboio do Saico recomenda este canal',
       user_name: displayUser(userChannel.displayName, userChannel.name),
-      game: userChannel.gameName
+      game: latinize(userChannel.gameName)
     });
     chatClient.say(channel, `Recomendação do Comboio: https://twitch.tv/${userChannel.name}, que estava em ${userChannel.gameName} - siga você também!`);
   }
