@@ -110,7 +110,7 @@ export default class LEDPanel {
     drawAnimatedHorizontal(font, text, color, interval) {
         return __awaiter(this, void 0, void 0, function* () {
             clearInterval(this.timer);
-            const bitmap = font.draw(text);
+            const bitmap = font.draw(text).crop(this.resolution.x, this.resolution.y);
             const offset = (this.resolution.x - bitmap.width()) >> 1;
             for (let j = 0; j < bitmap.width(); ++j) {
                 const colBitmap = bitmap.clone().crop(1, bitmap.height(), j, 0);
