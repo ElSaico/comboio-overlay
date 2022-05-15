@@ -137,20 +137,11 @@ module.exports = nodecg => {
     });
   });
 
-  const chatSettings = { channels: [config.channel.name] };
-  if (process.env.MOCK_CHAT) {
-    nodecg.log.info('Running in mock (fgdt) mode');
-    chatSettings.hostName = 'irc.fdgt.dev';
-    chatSettings.webSocket = false;
-    chatSettings.ssl = false; // we could add the Let's Encrypt intermediate cert to Node instead, but ehhhhh
-  } else {
-    chatSettings.authProvider = userAuthProvider;
-  }
-  const chatClient = new chat.ChatClient(chatSettings);
+  const chatClient = new chat.ChatClient({
+    channels: [config.channel.name],
+    authProvider: userAuthProvider
+  });
   chatClient.connect();
-  if (process.env.MOCK_CHAT) {
-    chatClient.onAnyMessage(msg => nodecg.log.debug(msg));
-  }
 
   let autoMessageIdx = 0;
   const autoMessages = new modernAsync.Scheduler(async () => {

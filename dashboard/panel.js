@@ -67,8 +67,4 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
-
-  $('#mock-send').click(() => {
-    nodecg.sendMessage('chat', $('[name=mock-message]').val());
-  });
 });
