@@ -1,6 +1,6 @@
 {
   "name": "comboio-overlay",
-  "version": "0.1.0",
+  "version": "0.9.0",
   "author": {
     "name": "Bruno Marques",
     "email": "bruno@bmarques.net",
@@ -27,6 +27,11 @@
         "file": "index.html",
         "width": 1920,
         "height": 1080
+      },
+      {
+        "file": "player.html",
+        "width": 800,
+        "height": 480
       }
     ]
   },

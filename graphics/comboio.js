@@ -47,7 +47,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const panelCounters = [1, 2, 3].map(i => new LEDPanel(document.getElementById(`counter${i}`), {x: 130, y: 8}, {x: 4, y: 5}));
   const ibmFont = await $Font(fetchline('fonts/ibm8x8.bdf'));
   const thinFont = await $Font(fetchline('fonts/metro.bdf'));
-  const commandMedia = document.getElementById('command-media');
   let alertLock = false;
   let idleIdx = 0;
   const idleAlertBar = new modernAsync.Scheduler(async () => {
@@ -64,15 +63,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
   }
-
-  commandMedia.onended = e => {
-    commandMedia.removeAttribute('src');
-    commandMedia.load();
-    if (mediaLock) {
-      mediaLock.resolve();
-      mediaLock = null;
-    }
-  };
 
   follower.on('change', value => {
     panelFollower.drawLoopable(thinFont, value, '#bfff00', 100);
@@ -97,10 +87,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   nodecg.listenFor('play', fileName => {
     eventQueue.exec(async () => {
       mediaLock = new modernAsync.Deferred();
-      commandMedia.src = `media/${fileName}`;
-      commandMedia.play();
+      nodecg.sendMessage('play-start', fileName);
       await mediaLock.promise;
     });
+  });
+
+  nodecg.listenFor('play-ended', () => {
+    if (mediaLock) {
+      mediaLock.resolve();
+      mediaLock = null;
+    }
   });
 
   nodecg.listenFor('alert', value => {

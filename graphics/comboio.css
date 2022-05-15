@@ -16,13 +16,8 @@ h3 {
     text-align: center;
 }
 
-svg, video {
+svg {
     position: absolute;
-}
-
-#command-media {
-    left: 365px;
-    top: 40px;
 }
 
 #label-follower {
