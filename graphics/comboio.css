@@ -35,11 +35,6 @@ svg {
     top: 920px;
 }
 
-#label-goal {
-    left: 1040px;
-    top: 920px;
-}
-
 #alerts {
     left: 365px;
     top: 20px;
@@ -60,22 +55,32 @@ svg {
     top: 1020px;
 }
 
-#display-goal {
-    left: 1040px;
-    top: 1020px;
-}
-
 #counter1 {
-    left: 1380px;
+    left: 1040px;
     top: 940px;
 }
 
 #counter2 {
-    left: 1380px;
+    left: 1040px;
     top: 980px;
 }
 
 #counter3 {
-    left: 1380px;
+    left: 1040px;
+    top: 1020px;
+}
+
+#counter4 {
+    left: 1480px;
+    top: 940px;
+}
+
+#counter5 {
+    left: 1480px;
+    top: 980px;
+}
+
+#counter6 {
+    left: 1480px;
     top: 1020px;
 }

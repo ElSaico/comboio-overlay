@@ -10,7 +10,6 @@ import LEDPanel from './led.js';
 const follower = nodecg.Replicant('follower');
 const subscriber = nodecg.Replicant('subscriber');
 const cheer = nodecg.Replicant('cheer');
-const goal = nodecg.Replicant('goal');
 const track = nodecg.Replicant('track');
 const counters = nodecg.Replicant('counters');
 
@@ -42,9 +41,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const panelFollower = new LEDPanel(document.getElementById('display-follower'), {x: 80, y: 8}, {x: 4, y: 5});
   const panelSubscriber = new LEDPanel(document.getElementById('display-subscriber'), {x: 80, y: 8}, {x: 4, y: 5});
   const panelCheer = new LEDPanel(document.getElementById('display-cheer'), {x: 80, y: 8}, {x: 4, y: 5});
-  const panelGoal = new LEDPanel(document.getElementById('display-goal'), {x: 80, y: 8}, {x: 4, y: 5});
   const panelAlerts = new LEDPanel(document.getElementById('alerts'), {x: 200, y: 8}, {x: 4, y: 5});
-  const panelCounters = [1, 2, 3].map(i => new LEDPanel(document.getElementById(`counter${i}`), {x: 130, y: 8}, {x: 4, y: 5}));
+  const panelCounters = [1, 2, 3, 4, 5, 6].map(i => new LEDPanel(document.getElementById(`counter${i}`), {x: 105, y: 8}, {x: 4, y: 5}));
   const ibmFont = await $Font(fetchline('fonts/ibm8x8.bdf'));
   const thinFont = await $Font(fetchline('fonts/metro.bdf'));
   let alertLock = false;
@@ -74,10 +72,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   cheer.on('change', value => {
     panelCheer.drawLoopable(thinFont, value, '#bfff00', 100);
-  });
-
-  goal.on('change', value => {
-    panelGoal.drawLoopable(thinFont, value, '#bfff00', 100);
   });
 
   track.on('change', value => {
@@ -150,8 +144,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   counters.on('change', value => {
     const visible = value.filter(counter => counter.show);
-    for (let i = 0; i < 3; ++i) {
-      const label = visible[i] ? `!${visible[i].command.padEnd(10)} ${visible[i].count.toString().padStart(4)}` : '';
+    for (let i = 0; i < 6; ++i) {
+      const label = visible[i] ? `!${visible[i].command.padEnd(7)} ${visible[i].count.toString().padStart(4)}` : '';
       panelCounters[i].drawLoopable(ibmFont, label, '#ff9900');
     }
   });
