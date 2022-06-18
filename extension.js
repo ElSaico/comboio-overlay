@@ -6,7 +6,6 @@ const chat = require('@twurple/chat');
 const eventSub = require('@twurple/eventsub');
 
 const express = require('express');
-const discordjs = require('discord.js');
 const iconv = require('iconv-lite');
 const modernAsync = require('modern-async');
 
@@ -259,33 +258,4 @@ module.exports = nodecg => {
   nodecg.listenFor('chat', message => {
     chatClient.say(config.channel.name, message);
   });
-
-  const discord = new discordjs.Client({ intents: [discordjs.Intents.FLAGS.GUILDS, discordjs.Intents.FLAGS.GUILD_MESSAGES] });
-  discord.once('ready', () => {
-    nodecg.log.info('Discord bot is up and running');
-    discord.channels.cache.get(config.discord.channelId).messages.fetch(config.discord.playerMessageId);
-  });
-  discord.on('messageUpdate', (oldMessage, newMessage) => {
-    if (newMessage.id === config.discord.playerMessageId) {
-      if (newMessage.embeds[0].title === 'Nenhuma música sendo reproduzida no momento') {
-        track.value = null;
-      } else {
-        const [duration, ...titleRest] = newMessage.embeds[0].title.split(' - ');
-        const nowPlaying = titleRest.join(' - ');
-        if (track.value !== nowPlaying) {
-          track.value = nowPlaying;
-          const username = config.discord.autoSh[nowPlaying];
-          if (username) {
-            nodecg.log.info('AutoPimba identified:', username);
-            setTimeout(() => {
-              chatClient.say(config.channel.name, `!sh ${username} #autopimba`);
-              // the chat listener ignores our own messages, thus we need to manually trigger its effect
-              sh(config.channel.name, username);
-            }, autoShDelay);
-          }
-        }
-      }
-    }
-  });
-  discord.login(config.discord.token);
 };
