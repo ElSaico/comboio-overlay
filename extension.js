@@ -1,3 +1,4 @@
+const fs = require('fs');
 const process = require('process');
 
 const api = require('@twurple/api');
@@ -40,13 +41,17 @@ module.exports = nodecg => {
   const follower = nodecg.Replicant('follower');
   const subscriber = nodecg.Replicant('subscriber');
   const cheer = nodecg.Replicant('cheer');
-  const donate = nodecg.Replicant('donate');
+  const mediaFiles = nodecg.Replicant('media-files');
   const track = nodecg.Replicant('track');
 
   Object.keys(config.secret).forEach(key => {
     if (config.secret[key].counter && !Number.isInteger(secretCount.value[key])) {
       secretCount.value[key] = 0;
     }
+  });
+
+  fs.readdir('bundles/comboio-overlay/graphics/media', (err, files) => {
+    mediaFiles.value = files;
   });
 
   const userAuthProvider = new auth.RefreshingAuthProvider(
@@ -60,7 +65,7 @@ module.exports = nodecg => {
   const userApiClient = new api.ApiClient({ authProvider: userAuthProvider });
   userApiClient.users.getFollows({ followedUser: config.channel.id, limit: 1 })
     .then(response => {
-      nodecg.log.debug('Initializing follow via Twitch Helix API');
+      nodecg.log.info('Initializing follow via Twitch Helix API');
       follower.value = displayUser(response.data[0].userDisplayName, response.data[0].userName);
     }).catch(err => {
       nodecg.log.error('Error on calling Twitch Helix API:', err.body);
@@ -84,7 +89,7 @@ module.exports = nodecg => {
       title: `Doação de ${data.amount} enviada para o Comboio`,
       message: data.message
     });
-    donate.value = `${data.from_name} (${data.amount})`;
+    //donate.value = `${data.from_name} (${data.amount})`;
     res.status(200).end();
   });
   webhook.post('/tipa', express.json(), (req, res) => {
@@ -100,7 +105,7 @@ module.exports = nodecg => {
       title: `Pix de ${amount} enviado para o Comboio`,
       message: tip.message
     });
-    donate.value = `${tip.name} (${amount})`;
+    //donate.value = `${tip.name} (${amount})`;
     res.status(200).end();
   });
 
@@ -228,6 +233,9 @@ module.exports = nodecg => {
           counter.count++;
           if (counter.message) {
             chatClient.say(channel, counter.message.replace('####', counter.count));
+          }
+          if (counter.play) {
+            nodecg.sendMessage('play', counter.play);
           }
         }
       }

@@ -21,9 +21,10 @@ document.addEventListener('DOMContentLoaded', () => {
   createLabelForm('#follower', 'follower');
   createLabelForm('#subscriber', 'subscriber');
   createLabelForm('#cheer', 'cheer');
-  createLabelForm('#goal', 'goal');
 
   const counters = nodecg.Replicant('counters');
+  const mediaFiles = nodecg.Replicant('media-files');
+  NodeCG.waitForReplicants(mediaFiles).then(() => {
   counters.on('change', value => {
     $('#counters').empty().jsonForm({
       schema: {
@@ -36,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
               description: { type: "string", title: "Description", required: true },
               message: { type: "string", title: "Message", description: "Use #### to replace with count" },
               count: { type: "integer", title: "Count", default: 0 },
+              play: { type: "string", title: "Play file", enum: [""].concat(mediaFiles.value), allowEmpty: true },
               show: { type: "boolean", title: "Show on screen", required: true }
             }
           }
@@ -52,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
               "counters[].description",
               "counters[].message",
               "counters[].count",
+              "counters[].play",
               "counters[].show"
             ]
           }
@@ -66,5 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
         counters.value = values.counters;
       }
     });
+  });
   });
 });
