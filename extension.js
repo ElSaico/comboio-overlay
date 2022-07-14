@@ -187,6 +187,11 @@ module.exports = nodecg => {
     if (command.message) {
       chatClient.say(channel, command.message);
     }
+    if (command.thread) {
+      command.thread.forEach(message => {
+        chatClient.say(channel, message, { replyTo: privmsg });
+      });
+    }
   }
   async function sh(channel, username) {
     const user = await userApiClient.users.getUserByName(username);
