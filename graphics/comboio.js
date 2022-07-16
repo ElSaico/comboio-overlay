@@ -7,6 +7,8 @@ import fetchline from '../node_modules/fetchline/dist/esm/index.js';
 
 import LEDPanel from './led.js';
 
+const COUNTER_SIZE = 6;
+
 const follower = nodecg.Replicant('follower');
 const subscriber = nodecg.Replicant('subscriber');
 const cheer = nodecg.Replicant('cheer');
@@ -144,8 +146,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   counters.on('change', value => {
     const visible = value.filter(counter => counter.show);
-    for (let i = 0; i < 6; ++i) {
-      const label = visible[i] ? `!${visible[i].command.padEnd(7)} ${visible[i].count.toString().padStart(4)}` : '';
+    for (let i = 0; i < COUNTER_SIZE; ++i) {
+      const label = visible[i] ? `!${visible[i].command.padEnd(8)} ${visible[i].count.toString().padStart(3)}` : '';
       panelCounters[i].drawLoopable(ibmFont, label, '#ff9900');
     }
   });
