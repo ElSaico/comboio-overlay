@@ -7,7 +7,7 @@ import fetchline from '../node_modules/fetchline/dist/esm/index.js';
 
 import LEDPanel from './led.js';
 
-const COUNTER_SIZE = 6;
+const COUNTER_SIZE = 4;
 
 const follower = nodecg.Replicant('follower');
 const subscriber = nodecg.Replicant('subscriber');
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const panelSubscriber = new LEDPanel(document.getElementById('display-subscriber'), {x: 80, y: 8}, {x: 4, y: 5});
   const panelCheer = new LEDPanel(document.getElementById('display-cheer'), {x: 80, y: 8}, {x: 4, y: 5});
   const panelAlerts = new LEDPanel(document.getElementById('alerts'), {x: 200, y: 8}, {x: 4, y: 5});
-  const panelCounters = [1, 2, 3, 4, 5, 6].map(i => new LEDPanel(document.getElementById(`counter${i}`), {x: 105, y: 8}, {x: 4, y: 5}));
+  const panelCounters = [1, 2, 3, 4].map(i => new LEDPanel(document.getElementById(`counter${i}`), {x: 105, y: 8}, {x: 4, y: 5}));
   const ibmFont = await $Font(fetchline('fonts/ibm8x8.bdf'));
   const thinFont = await $Font(fetchline('fonts/metro.bdf'));
   let alertLock = false;

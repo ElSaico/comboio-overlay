@@ -22,17 +22,17 @@ svg {
 
 #label-follower {
     left: 20px;
-    top: 920px;
+    top: 930px;
 }
 
 #label-subscriber {
     left: 360px;
-    top: 920px;
+    top: 930px;
 }
 
 #label-cheer {
     left: 700px;
-    top: 920px;
+    top: 930px;
 }
 
 #alerts {
@@ -57,30 +57,20 @@ svg {
 
 #counter1 {
     left: 1040px;
-    top: 940px;
+    top: 980px;
 }
 
 #counter2 {
     left: 1040px;
-    top: 980px;
-}
-
-#counter3 {
-    left: 1040px;
     top: 1020px;
 }
 
-#counter4 {
-    left: 1480px;
-    top: 940px;
-}
-
-#counter5 {
+#counter3 {
     left: 1480px;
     top: 980px;
 }
 
-#counter6 {
+#counter4 {
     left: 1480px;
     top: 1020px;
 }
