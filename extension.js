@@ -1,4 +1,5 @@
 const fs = require('fs');
+const net = require('net');
 const process = require('process');
 
 const api = require('@twurple/api');
@@ -6,6 +7,7 @@ const auth = require('@twurple/auth');
 const chat = require('@twurple/chat');
 const eventSub = require('@twurple/eventsub');
 
+const aedes = require('aedes');
 const express = require('express');
 const iconv = require('iconv-lite');
 const modernAsync = require('modern-async');
@@ -34,15 +36,16 @@ function latinize(text) {
 
 module.exports = nodecg => {
   const config = nodecg.bundleConfig;
-  const tokens = nodecg.Replicant('tokens');
-  const counters = nodecg.Replicant('counters');
-  const secretCount = nodecg.Replicant('secret-counters');
+  const tokens = nodecg.Replicant('tokens', { defaultValue: {} });
+  const counters = nodecg.Replicant('counters', { defaultValue: {} });
+  const secretCount = nodecg.Replicant('secret-counters', { defaultValue: {} });
 
-  const follower = nodecg.Replicant('follower');
-  const subscriber = nodecg.Replicant('subscriber');
-  const cheer = nodecg.Replicant('cheer');
-  const mediaFiles = nodecg.Replicant('media-files');
-  const track = nodecg.Replicant('track');
+  const follower = nodecg.Replicant('follower', { defaultValue: '' });
+  const subscriber = nodecg.Replicant('subscriber', { defaultValue: '' });
+  const cheer = nodecg.Replicant('cheer', { defaultValue: '' });
+  const mediaFiles = nodecg.Replicant('media-files', { defaultValue: [] });
+
+  const elite = nodecg.Replicant('elite', { defaultValue: {} });
 
   Object.keys(config.secret).forEach(key => {
     if (config.secret[key].counter && !Number.isInteger(secretCount.value[key])) {
@@ -80,7 +83,7 @@ module.exports = nodecg => {
   webhook.post('/ko-fi', (req, res) => {
     const data = JSON.parse(req.body.data);
     if (!data.is_public) {
-      data.from_name = '???';
+      data.from_name = 'anônimo';
     }
     data.amount = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: data.currency }).format(data.amount);
     nodecg.sendMessage('alert', {
@@ -270,5 +273,36 @@ module.exports = nodecg => {
   });
   nodecg.listenFor('chat', message => {
     chatClient.say(config.channel.name, message);
+  });
+
+  const mqtt = aedes();
+  mqtt.authenticate = (client, username, password, cb) => {
+    cb(null, username === config.mqtt.secret);
+  }
+  mqtt.on('clientReady', client => {
+    nodecg.log.info(`MQTT client connected: ${client.id}`);
+  });
+  const mqttServer = net.createServer(mqtt.handle);
+  mqttServer.listen(config.mqtt.port, () => {
+    nodecg.log.info('MQTT server ready');
+  });
+
+  mqtt.subscribe(`${config.mqtt.rootTopics.elite}/#`, (packet, cb) => {
+    const root = config.mqtt.rootTopics.elite;
+    const payload = packet.payload.toString();
+    switch (packet.topic) {
+      case `${root}/FeedActive`:
+      case `${root}/GameRunning`:
+        break;
+      case `${root}/Location/System`:
+        elite.system = payload;
+        break;
+      case `${root}/Location/Station`:
+        elite.station = payload;
+        break;
+      default:
+        nodecg.log.debug(`MQTT topic unprocessed: ${packet.topic}`);
+    }
+    cb();
   });
 };
